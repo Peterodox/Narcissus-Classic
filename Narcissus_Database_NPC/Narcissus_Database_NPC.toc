@@ -1,0 +1,15 @@
+## Interface: 90200
+## Plain Title: Narcissus Database NPC
+## Version: 9.2.1
+## LoadOnDemand: 1
+## RequiredDeps: Narcissus
+### SavedVariables: UniqueCreatureIDs, LocalizedNames, SortedNames, CreatureIDxModelFileID, UnprocessedCreatures
+
+## Title: |cfffcca38N|r|cfff5cb45a|r|cffeecc50r|r|cffe6cd5bc|r|cffdece65i|r|cffd6ce6es|r|cffcdce77s|r|cffc4ce80u|r|cffb9ce89s|r |cff666666Database NPC|r
+
+## Notes: Find any NPC by name.
+
+## Author: Peterodox
+
+
+Creatures\DB.xml

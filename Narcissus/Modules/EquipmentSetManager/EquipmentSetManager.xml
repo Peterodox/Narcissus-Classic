@@ -1,0 +1,394 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <Script file="EquipmentSetTooltip.lua"/>
+    <Script file="IconSelector.lua"/>
+    <Script file="PushAndHoldButton.lua"/>
+    <Script file="EquipmentSetManager.lua"/>
+    <Script file="PaperDollFlyout.lua"/>
+
+    <Button name="NarciEquipmentSetButtonTemplate" virtual="true" mixin="NarciEquipmentSetButtonMixin" registerForClicks="LeftButtonUp, RightButtonUp">
+        <Size x="168" y="36"/>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="Background">
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+                <Texture parentKey="Icon">
+                    <Size x="24" y="24"/>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="6"/>
+                    </Anchors>
+                </Texture>
+
+				<FontString inherits="NarciFontMedium12" justifyH="LEFT" justifyV="MIDDLE" parentKey="Name" maxLines="2">
+					<Size x="114" y="0"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="36" y="0"/>
+					</Anchors>
+				</FontString>
+
+                <Texture parentKey="EquippedMarker" hidden="true" file="Interface\AddOns\Narcissus\Art\Modules\EquipmentSetManager\UI">
+                    <Size x="24" y="24"/>
+                    <TexCoords left="0" right="0.125" top="0.5" bottom="0.625"/>
+                    <Anchors>
+                        <Anchor point="CENTER" relativeKey="$parent" relativePoint="RIGHT" x="-12"/>
+                    </Anchors>
+                    <Animations>
+                        <AnimationGroup parentKey="AnimShow">
+                            <Rotation degrees="-45" duration="0" order="1"/>
+                            <Alpha fromAlpha="0" toAlpha="0" duration="0" order="1"/>
+                            <Alpha fromAlpha="0" toAlpha="1" duration="0.15" order="2"/>
+                            <Rotation degrees="45" duration="0.25" order="3"/>
+                        </AnimationGroup>
+                    </Animations>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY" textureSubLevel="6">
+                <Texture parentKey="IconOverlay" file="Interface\AddOns\Narcissus\Art\Modules\EquipmentSetManager\UI">
+                    <Size x="36" y="36"/>
+                    <TexCoords left="0" right="0.1875" top="0" bottom="0.1875"/>
+                    <Anchors>
+                        <Anchor point="CENTER" relativeKey="$parent.Icon" relativePoint="CENTER"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad method="OnLoad"/>
+            <OnEnter method="OnEnter"/>
+            <OnLeave method="OnLeave"/>
+            <OnClick method="OnClick"/>
+            <OnDoubleClick method="OnDoubleClick"/>
+            <OnDragStart method="OnDragStart"/>
+            <OnMouseDown method="OnMouseDown"/>
+            <OnMouseUp method="OnMouseUp"/>
+        </Scripts>
+    </Button>
+
+    <Button name="NarciPushAndHoldButtonTemplate" virtual="true" mixin="NarciPushAndHoldButtonMixin" motionScriptsWhileDisabled="true">
+        <Size x="84" y="24"/>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="Background">
+                    <Color r="0.15" g="0.15" b="0.15"/>
+                </Texture>
+            </Layer>
+            <Layer level="BORDER">
+                <Texture parentKey="Highlight" hidden="true">
+                    <Color r="0.25" g="0.25" b="0.25"/>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+				<FontString inherits="NarciFontMedium12" justifyH="CENTER" justifyV="MIDDLE" parentKey="Name" maxLines="1" text="Button">
+					<Size x="72" y="0"/>
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent" relativePoint="CENTER" x="0" y="0"/>
+					</Anchors>
+				</FontString>
+                <Texture parentKey="Bar" hidden="true">
+                    <Size x="1" y="2"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" y="0"/>
+                    </Anchors>
+                    <Color r="1" g="1" b="1" a="1"/>
+                    <Gradient orientation="HORIZONTAL">
+                        <MaxColor a="1" r="1" g="1" b="1"/>
+                        <MinColor a="1" r="0.5" g="0.5" b="0.5"/>
+                    </Gradient>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad method="OnLoad"/>
+            <OnMouseDown method="OnMouseDown"/>
+            <OnMouseUp method="OnMouseUp"/>
+            <OnClick method="OnClick"/>
+            <OnEnter method="OnEnter"/>
+            <OnLeave method="OnLeave"/>
+            <OnHide method="OnHide"/>
+        </Scripts>
+    </Button>
+
+    <Frame name="NarciEquipmentSetManager" mixin="NarciEquipmentSetManagerMixin" hidden="true">
+        <Size x="168" y="384"/>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="Background">
+                    <Color r="0.06" g="0.06" b="0.06" a="0.67"/>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <Texture parentKey="Header">
+                    <Color r="0.08" g="0.08" b="0.08"/>
+                    <Size y="24"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT"/>
+                        <Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+				<FontString inherits="NarciFontMedium12" justifyH="CENTER" justifyV="MIDDLE" parentKey="Header" text="PAPERDOLL_EQUIPMENTMANAGER">
+					<Size x="0" y="24"/>
+                    <Color r="0.5" g="0.5" b="0.5"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Header" relativePoint="LEFT" x="6" y="0"/>
+                        <Anchor point="RIGHT" relativeKey="$parent.Header" relativePoint="RIGHT" x="-6" y="0"/>
+					</Anchors>
+				</FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="MouseOverFrame">
+                <Size x="168" y="36"/>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture parentKey="Background">
+                            <Color r="0.45" g="0.45" b="0.45"/>
+							<Gradient orientation="HORIZONTAL">
+								<MinColor a="1" r="1" g="1" b="1"/>
+								<MaxColor a="0" r="1" g="1" b="1"/>
+							</Gradient>
+                        </Texture>
+                    </Layer>
+                    <Layer level="OVERLAY" textureSubLevel="6">
+                        <Texture parentKey="NewFlash" file="Interface\AddOns\Narcissus\Art\EquipmentOption\SelectionHighlight" alphaMode="ADD" alpha="0.4" hidden="true">
+                            <TexCoords left="0" right="1" top="0.25" bottom="0.75"/>
+                            <Size x="96" y="36"/>
+                            <Anchors>
+                                <Anchor point="LEFT" x="-96"/>
+                            </Anchors>
+                            <Animations>
+                                <AnimationGroup parentKey="FlyBy">
+                                    <Translation offsetX="266" duration="0.25" order="1" smoothing="IN_OUT"/>
+                                    <Scripts>
+                                        <OnFinished>
+                                            self:GetParent():Hide();
+                                        </OnFinished>
+                                    </Scripts>
+                                </AnimationGroup>
+                            </Animations>
+                        </Texture>
+                        <MaskTexture parentKey="FlashMask" file="Interface\AddOns\Narcissus\Art\Masks\Full" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+                            <Anchors>
+                                <Anchor point="TOPLEFT"/>
+                                <Anchor point="BOTTOMRIGHT"/>
+                            </Anchors>
+                            <MaskedTextures>
+                                <MaskedTexture childKey="NewFlash"/>
+                            </MaskedTextures>
+                        </MaskTexture>
+                    </Layer>
+                </Layers>
+                <Frames>
+
+                </Frames>
+            </Frame>
+
+            <EditBox parentKey="NameEditor" hidden="true" letters="16">
+                <Size x="112" y="24"/>
+				<FontString inherits="NarciFontMedium12" justifyH="LEFT" justifyV="MIDDLE">
+                    <Color r="1" g="1" b="1"/>
+				</FontString>
+                <Layers>
+                    <Layer level="OVERLAY" textureSubLevel="5">
+                        
+                    </Layer>
+                    <Layer level="OVERLAY" textureSubLevel="6">
+                        <FontString inherits="NarciIndicatorDigit" justifyH="RIGHT" justifyV="MIDDLE" hidden="false" parentKey="LetterCount">
+                            <Color r="1" g="1" b="1"/>
+                            <Anchors>
+                                <Anchor point="RIGHT" relativeKey="$parent" relativePoint="RIGHT" x="-5"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button parentKey="ConfirmButton">
+                        <Size x="24" y="24"/>
+                        <HitRectInsets left="2" right="-6"/>
+                        <Anchors>
+                            <Anchor point="RIGHT"/>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <Texture parentKey="Background">
+                                    <Color r="0.25" g="0.25" b="0.25"/>
+                                    <Gradient orientation="HORIZONTAL">
+                                        <MinColor a="0" r="1" g="1" b="1"/>
+                                        <MaxColor a="1" r="1" g="1" b="1"/>
+                                    </Gradient>
+                                </Texture>
+                            </Layer>
+                            <Layer levle="BACKGROUND">
+                                <Texture parentKey="Shadow" file="Interface\AddOns\Narcissus\Art\Modules\EquipmentSetManager\ConfirmButtonShadow">
+                                    <Size x="48" y="48"/>
+                                    <Anchors>
+                                        <Anchor point="CENTER"/>
+                                    </Anchors>
+                                </Texture>
+                            </Layer>
+                            <Layer level="OVERLAY">
+                                <Texture parentKey="Icon" file="Interface\AddOns\Narcissus\Art\Modules\EquipmentSetManager\UI">
+                                    <Size x="12" y="12"/>
+                                    <TexCoords left="0" right="0.0625" top="0.9375" bottom="1"/>
+                                    <Anchors>
+                                        <Anchor point="CENTER" x="2"/>
+                                    </Anchors>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </Button>
+                </Frames>
+            </EditBox>
+
+            <Frame parentKey="IconSelector" hidden="true" mixin="NarciIconSelectorMixin" enableMouse="true" frameStrata="HIGH">
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="Background">
+                            <Color r="0.15" g="0.15" b="0.15" a="1"/>
+                        </Texture>
+                    </Layer>
+                    <Layer level="BORDER">
+                        <Texture parentKey="Selection" file="Interface\AddOns\Narcissus\Art\Modules\EquipmentSetManager\UI" hidden="true">
+                            <Size x="36" y="36"/>
+                            <TexCoords left="0.25" right="0.4375" top="0" bottom="0.1875"/>
+                            <Anchors>
+                                <Anchor point="CENTER" relativeKey="$parent.Icon" relativePoint="CENTER"/>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="OVERLAY">
+                        <FontString inherits="NarciFontMedium12" justifyH="CENTER" justifyV="MIDDLE" parentKey="Header" text="NARCI_ICON_SELECTOR">
+                            <Size x="0" y="24"/>
+                            <Color r="0.5" g="0.5" b="0.5"/>
+                            <Anchors>
+                                <Anchor point="CENTER" relativeKey="$parent" relativePoint="TOP" x="0" y="-12"/>
+                            </Anchors>
+                        </FontString>
+                        <FontString inherits="NarciFontMedium12" justifyH="CENTER" justifyV="MIDDLE" parentKey="PageText" text="1 / 1">
+                            <Size x="0" y="24"/>
+                            <Color r="0.5" g="0.5" b="0.5"/>
+                            <Anchors>
+                                <Anchor point="CENTER" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="12"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                    <Layer level="OVERLAY" textureSubLevel="4">
+                        <Texture parentKey="OverlayIcon">
+                            <Size x="24" y="24"/>
+                            <TexCoords left="0.075" right="0.925" top="0.075" bottom="0.925"/>
+                            <Anchors>
+                                <Anchor point="CENTER" relativeKey="$parent" relativePoint="CENTER" x="0"/>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad method="OnLoad"/>
+                    <OnMouseWheel method="OnMouseWheel"/>
+                    <OnHide method="OnHide"/>
+                </Scripts>
+            </Frame>
+
+            <Button parentKey="OverwriteButton" inherits="NarciPushAndHoldButtonTemplate" hidden="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT"/>
+                </Anchors>
+            </Button>
+
+            <Button parentKey="DeleteButton" inherits="NarciPushAndHoldButtonTemplate" hidden="true">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativeKey="$parent" relativePoint="TOPRIGHT"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture parentKey="ShadowDivider">
+                            <Size x="24" y="24"/>
+                            <Anchors>
+                                <Anchor point="LEFT"/>
+                            </Anchors>
+                            <Color r="0" g="0" b="0"/>
+							<Gradient orientation="HORIZONTAL">
+								<MinColor a="0.4" r="1" g="1" b="1"/>
+								<MaxColor a="0" r="1" g="1" b="1"/>
+							</Gradient>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad method="OnLoad"/>
+            <OnShow method="OnShow"/>
+            <OnHide method="OnHide"/>
+            <OnEvent method="OnEvent"/>
+            <OnMouseWheel method="OnMouseWheel"/>
+        </Scripts>
+    </Frame>
+
+    <Button name="NarciPaperDollFlyoutButtonTemplate" virtual="true" frameStrata="DIALOG" motionScriptsWhileDisabled="true">
+        <Size x="37" y="37"/>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\UI-Quickslot2">
+                    <Size x="64" y="64"/>
+                    <Anchors>
+                        <Anchor point="CENTER" x="0" y="0"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="BORDER">
+                <Texture parentKey="Icon">
+
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+                <Texture parentKey="IconBorder" file="Interface\Common\WhiteIconFrame" hidden="false">
+                    <Size x="37" y="37"/>
+                    <Anchors>
+                        <Anchor point="CENTER"/>
+                    </Anchors>
+                </Texture>
+                <FontString inherits="NarciFontNumber12Outline" justifyH="RIGHT" justifyV="BOTTOM" hidden="true" parentKey="ItemLevel">
+                    <Color r="1" g="1" b="1"/>
+                    <Anchors>
+                        <Anchor point="BOTTOMRIGHT" y="2"/>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <PushedTexture file="Interface\Buttons\UI-Quickslot-Depress" parentKey="PushedTexture"/>
+        <HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+    </Button>
+
+    <Button parentKey="NarciEquipmentManagerToggle" parent="PaperDollFrame" mixin="NarciEquipmentManagerToggleMixin">
+        <Size x="38" y="24"/>
+        <Anchors>
+            <Anchor point="BOTTOM" relativeTo="CharacterHandsSlot" relativePoint="TOP" y="4"/>
+        </Anchors>
+        <Layers>
+            <Layer level="OVERLAY">
+                <Texture parentKey="Texture" file="Interface\AddOns\Narcissus\Art\Modules\EquipmentSetManager\PaperDollToggle">
+                    <Size x="40" y="20"/>
+                    <TexCoords left="0" right="0.5" top="0" bottom="0.5"/>
+                    <Anchors>
+                        <Anchor point="BOTTOM"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad method="OnLoad"/>
+            <OnMouseDown method="OnMouseDown"/>
+            <OnMouseUp method="OnMouseUp"/>
+            <OnEnter method="OnEnter"/>
+            <OnLeave method="OnLeave"/>
+            <OnClick method="OnClick"/>
+            <OnShow method="OnShow"/>
+        </Scripts>
+    </Button>
+</Ui>

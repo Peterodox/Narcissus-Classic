@@ -1,0 +1,80 @@
+## Interface: 30403
+## Plain Title: Narcissus
+## Version: 1.1.7
+
+## Title: Narcissus
+
+## Notes: Immersive paperdoll frame and in-game studio. |n|cff959595Slash command: /Narci|r
+## Notes-zhCN: 为展示和分享而生的沉浸式角色界面|n|cff959595命令: /Narci|r
+## Notes-zhTW: 為展示和分享而生的沈浸式角色界面|n|cff959595命令: /Narci|r
+
+## Author: Peterodox
+## SavedVariables: NarcissusDB, NarciCreatureOptions, NarciAchievementOptions, NarciStatisticsDB, NarciTurntableOptions, NarciCharacterProfiles,
+## SavedVariablesPerCharacter: NarcissusDB_PC, NarciStatisticsDB_PC
+
+
+Font\FontSettings.xml
+
+Initialization.lua
+Locales\Localization.xml
+
+#NarciDB\TitleManagerDB.lua
+NarciDB\GearBonus.lua
+NarciDB\API.xml
+
+Modules\ModuleManager\ModuleManager.lua
+
+Widgets\NarciUITemplates.xml
+Widgets\WidgetTooltip.xml
+Constants\Constants.xml
+
+Bridge\Bridge.xml
+
+Modules\GameTooltip\GameTooltip.xml
+
+Modules\EquipmentSetManager\EquipmentSetManager.xml
+
+Modules\CharacterFrame\NavBar.xml
+Modules\CharacterFrame\TemporaryEnchant.xml
+Modules\CharacterFrame\ItemSocketing.xml
+Modules\EquipmentOption\EquipmentOption.xml
+Modules\CharacterFrame\ItemCooldown.xml
+Modules\CharacterFrame\Attributes.xml
+Modules\CharacterFrame\ItemLevelFrame.lua
+Modules\CharacterFrame\ClassicEra_Engraving.lua
+Modules\MsgAlert\Alert.xml
+Modules\ScreenshotTool\ScreenshotTool.xml
+Modules\MinimapButton\MinimapButton.xml
+
+Narcissus.xml
+SettingsFrame.xml
+#Preference.xml
+
+Modules\CharacterFrame\EquipmentComparisonFlyout.xml
+#Modules\CharacterFrame\TitleManager.xml
+
+Modules\PhotoMode\SharedUI.xml
+Modules\PhotoMode\Widgets.xml
+Modules\PhotoMode\PhotoMode.xml
+Modules\PhotoMode\SpellVisualBrowser.xml
+Modules\PhotoMode\NPCBrowser.xml
+Modules\PhotoMode\AnimationBrowser.xml
+Modules\PhotoMode\WeaponBrowser.xml
+Modules\PhotoMode\PetStable.xml
+Modules\PhotoMode\ExitConfirmationDialog.xml
+Modules\PhotoMode\SpeechBalloon.xml
+#Modules\PhotoMode\Sticker.xml
+Modules\PhotoMode\OutfitSelect.xml
+
+#Modules\DressingRoom\DressingRoom.xml
+
+Modules\AFKScreen\AFKScreen.xml
+Modules\AR\AR.xml
+Modules\Splash\Splash.xml
+
+Modules\Statistics\Core.lua
+
+Filters\CameraEffect.xml
+Filters\Letterbox.xml
+
+Guide\Guide.xml

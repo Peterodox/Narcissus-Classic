@@ -1,0 +1,14 @@
+## Interface: 30403
+## Version: 9.2.1
+## LoadOnDemand: 1
+## RequiredDeps: Narcissus
+### SavedVariables: UniqueCreatureIDs, LocalizedNames, SortedNames, CreatureIDxModelFileID, UnprocessedCreatures
+
+## Title: Narcissus Database NPC
+
+## Notes: Find any NPC by name.
+
+## Author: Peterodox
+
+
+Creatures\DB.xml

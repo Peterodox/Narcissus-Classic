@@ -1,0 +1,15 @@
+## Interface: 30403
+## Version: 9.2.7
+## LoadOnDemand: 1
+## RequiredDeps: Narcissus
+
+# SavedVariables: NarciDevToolOutput
+# Plain Title: Narcissus Achievements
+## Title: |cfffcca38N|r|cfff5cb45a|r|cffeecc50r|r|cffe6cd5bc|r|cffdece65i|r|cffd6ce6es|r|cffcdce77s|r|cffc4ce80u|r|cffb9ce89s|r |cffe5c75fAchievements|r
+## Notes: A standalone achievement UI.
+## Notes-zhCN: Narcissus成就面板
+
+## Author: Peterodox
+
+
+Code\Achievements.xml

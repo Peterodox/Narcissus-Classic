@@ -1,0 +1,15 @@
+## Interface: 11502
+## Version: 9.2.7
+## LoadOnDemand: 1
+## RequiredDeps: Narcissus
+
+# SavedVariables: NarciDevToolOutput
+# Plain Title: Narcissus Achievements
+## Title: Narcissus Achievements
+## Notes: Does not work on WoW Classic (lvl 60).
+## Notes-zhCN: 不适用于60级怀旧服。
+
+## Author: Peterodox
+
+
+#Code\Achievements.xml
