@@ -92,8 +92,6 @@ L["Toolbar Preferences Button Tooltip"] = "Open Preferences panel.";
 L["Heritage Armor"] = "Heritage Armor";
 L["Secret Finding"] = "Secret Finding";
 
-NARCI_HEART_QUOTE_1 = "what is essential is invisible to the eye.";
-
 --Title Manager--
 L["Open Title Manager"] = "Open Title Manager";
 L["Close Title Manager"] = "Close Title Manager";
@@ -114,8 +112,6 @@ L["Minimap Tooltip Middle Button"] = "|CFFFF1000Middle button |cffffffffReset ca
 L["Minimap Tooltip Set Scale"] = "Set Scale: |cffffffff/narci [scale 0.8~1.2]";
 L["Corrupted Item Parser"] = "|cffffffffToggle Corrupted Item Parser|r";
 L["Toggle Dressing Room"] = "|cffffffffToggle "..DRESSUP_FRAME.."|r";
-
-NARCI_CLIPBOARD = "Clipboard";
 L["Layout"] = "Layout";
 L["Symmetry"] = "Symmetry";
 L["Asymmetry"] = "Asymmetry";
@@ -125,17 +121,12 @@ L["Plain Text"] = "Plain Text";
 L["BB Code"] = "BB Code";
 L["Markdown"] = "Markdown";
 L["Export Includes"] = "Export Includes...";
-NARCI_ITEM_ID = "Item ID";
-
 L["3D Model"] = "3D Model";
-NARCI_EQUIPMENTSLOTS = "Equipment Slots";
+L["Equipment Slots"] = "Equipment Slots";
 
 --Preferences--
-
-NARCI_PHOTO_MODE = L["Photo Mode"];
-NARCI_OVERRIDE = "Override";
-NARCI_INVALID_KEY = "Invalid key combination.";
-NARCI_REQUIRE_RELOAD = NARCI_COLOR_RED_MILD.. "UI reload is required.|r";
+L["Override"] = "Override";
+L["Invalid Key"] = "Invalid key combination.";
 
 L["Preferences"] = "Preferences";
 L["Preferences Tooltip"] = "Click to open Preferences Panel.";
@@ -265,20 +256,17 @@ L["Press Copy Yellow"] = "Press |cffffd100".. NARCI_SHORTCUTS_COPY .."|r to Copy
 L["New Option"] = NARCI_NEW_ENTRY_PREFIX.." NEW".."|r"
 L["Expansion Features"] = "Expansion Features";
 L["Loop Animation"] = "Loop Animation";
+L["Speedy Screenshot Alert"] = "Remove \"UI Hidden\" Message";
 
 --Model Control--
-NARCI_STAND_IDLY = "Stand Idly";
-NARCI_RANGED_WEAPON = "Ranged Weapon";
-NARCI_MELEE_WEAPON = "Melee Weapon";
-NARCI_SPELLCASTING = "Spellcasting";
-NARCI_ANIMATION_ID = "Animation ID";
-NARCI_LINK_LIGHT_SETTINGS = "Link Light Sources";
-NARCI_LINK_MODEL_SCALE = "Link Model Scales";
-NARCI_GROUP_PHOTO_AVAILABLE = "Now available in Narcissus";
-NARCI_GROUP_PHOTO_NOTIFICATION = "Please select a target.";
-NARCI_GROUP_PHOTO_STATUS_HIDDEN = "Hidden";
-NARCI_DIRECTIONAL_AMBIENT_LIGHT = "Directional/Ambient Light";
-NARCI_DIRECTIONAL_AMBIENT_LIGHT_TOOLTIP = "Switch between\n- Directional light that can be blocked by object and cast shadow\n- Ambient light that influences the entire model";
+L["Ranged Weapon"] = "Ranged Weapon";
+L["Melee Animation"] = "Melee Animation";
+L["Spellcasting"] = "Spellcasting";
+L["Link Light Sources"] = "Link Light Sources";
+L["Link Model Scales"] = "Link Model Scales";
+L["Hidden"] = "Hidden";
+L["Light Types"] = "Directional/Ambient Light";
+L["Light Types Tooltip"] = "Switch between\n- Directional light that can be blocked by object and cast shadow\n- Ambient light that influences the entire model";
 
 L["Group Photo"] = "Group Photo";
 L["Reset"] = "Reset";
@@ -472,7 +460,6 @@ L["Hide Dates"] = "Hide Dates";
 L["Pinned Entries"] = "Pinned Entries";
 L["Pinned Entry Format"] = "Pinned  %d/%d";
 
-
 --Barbershop--
 L["Save New Look"] = "Save New Look";
 L["No Available Slot"] = "No Available Slot";
@@ -511,9 +498,7 @@ L["Guide Minimap Button Line1"] = "Narcissus minimap button can now be handled b
 L["Guide NPC Entrance Line1"] = "You can add any NPC into your scene."
 L["Guide NPC Browser Line1"] = "Notable NPCs are listed in the catalog below.\nYou can also search for ANY creatures by name or ID.\nNotice that the first time you use the search function this login, it could take a few seconds to build the search table and your screen might freeze as well.\nYou may untoggle the \"Load on Demand\" option in the Preference Pane so that the database will be constructed right after you log in.";
 
-
 --Splash--
-NARCI_SPLASH_WHATS_NEW_FORMAT = "What's New in Narcissus %s";
 L["See Ads"] = "See ads from our authentic sponsor";    --Not real ads!
 L["Splash Category1"] = L["Photo Mode"];
 L["Splash Content1 Name"] = "Weapon Browser";
@@ -531,13 +516,6 @@ L["Splash Content6 Name"] = "Soulbinds";
 L["Splash Content6 Description"] = "-The Soulbinds UI has been updated. You can check the conduit effects of higher ranks.";
 L["Splash Content7 Name"] = "Visuals";
 L["Splash Content7 Description"] = "-The hexagon item border gets a new look. Certain items have unique appearances.";
-
---Project Details--
-NARCI_ALL_PROJECTS = "All Projects";
-NARCI_PROJECT_DETAILS = "|cFFFFD100Developer: Peterodox\nRelease Date: February 7, 2023|r\n\nThank you for trying this add-on! If you have any issues, suggestions, ideas, please leave a comment on the curseforge page or contact me on...";
-NARCI_PROJECT_AAA_TITLE = "|cff008affA|cff0d8ef2z|cff1a92e5e|cff2696d9r|cff339acco|cff409ebft|cff4da1b2h |cff59a5a6A|cff66a999d|cff73ad8cv|cff7fb180e|cff8cb573n|cff99b966t|cffa6bd59u|cffb2c14dr|cffbfc440e |cffccc833A|cffd9cc26l|cffe5d01ab|cfff2d40du|cffffd800m|r";
-NARCI_PROJECT_AAA_SUMMARY = "Explore places of interest and collect lores and photos from all across Azeroth.|cff636363";
-NARCI_PROJECT_NARCISSUS_SUMMARY = "An immersive character pane and your ultimate screenshot tool.";
 
 --Credits--
 L["Credit List Extra"] = "Marlamin | WoW.tools\nKeyboardturner | Avid Bug Finder(Generator)\nHubbotu | Translator - Russian\nMeorawr | Wondrous Wisdomball";

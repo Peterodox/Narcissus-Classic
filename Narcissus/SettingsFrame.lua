@@ -350,10 +350,10 @@ end
 ---- Feature Preview Pictures ----
 local FeaturePreview = {
     --textureKey[same as DB key] = {fileName, imageWidth, imageWidth, effectiveWidth, effectiveHeight, customScale(default 0.75)}
-    EquipmentSetManager = {"Preview-EquipmentManager", 512, 512, 512, 320, 0.5},
-    ItemFlyout = {"Preview-ItemFlyout", 512, 256, 512, 206, 0.5},
-    NameTranslationPosition1 = {"Preview-TranslationOnTooltip", 256, 256, 149, 193},
-    NameTranslationPosition2 = {"Preview-TranslationOnNameplate", 256, 256, 149, 193},
+    EquipmentSetManager = {"Preview-EquipmentManager.png", 512, 512, 512, 320, 0.5},
+    ItemFlyout = {"Preview-ItemFlyout.png", 512, 256, 512, 206, 0.5},
+    NameTranslationPosition1 = {"Preview-TranslationOnTooltip.png", 256, 256, 149, 193},
+    NameTranslationPosition2 = {"Preview-TranslationOnNameplate.png", 256, 256, 149, 193},
 };
 
 function FeaturePreview.FadeIn_OnUpdate(f, elapsed)
@@ -676,6 +676,10 @@ end
 
 local function LoopAnimation_OnValueChanged(self, value)
     SettingFunctions.SetModelLoopAnimation(value);
+end
+
+local function SpeedyScreenshotAlert_OnValueChanged(self, value)
+    SettingFunctions.SpeedyScreenshotAlert(value);
 end
 
 local function GetOppositeValue(value)
@@ -2048,6 +2052,7 @@ local Categories = {
             {type = "subheader", level = 1, text = L["Screenshot Quality Description"]},
             {type = "slider", level = 1, key = "ModelPanelScale", text = L["Panel Scale"], onValueChangedFunc = ModelPanelScale_OnValueChanged, minValue = 0.8, maxValue = 1, valueStep = 0.1, extraTopPadding = 1, valueFormatFunc = Round1},
             {type = "slider", level = 1, key = "ShrinkArea", text = L["Interactive Area"], onValueChangedFunc = ModelHitRectShrinkage_OnValueChanged, minValue = 0, maxValue = MAX_MODEL_SHRINKAGE, valueFormatFunc = GetOppositeValue, convertionFunc = Round0},
+            {type = "checkbox", level = 1, key = "SpeedyScreenshotAlert", text = L["Speedy Screenshot Alert"], onValueChangedFunc = SpeedyScreenshotAlert_OnValueChanged},
         },
     },
 

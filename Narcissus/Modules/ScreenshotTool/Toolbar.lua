@@ -600,7 +600,7 @@ end
 
 local function ToolbarButton_OnEnter(self)
     MainFrame:OnEnter();
-    MainFrame.Tooltip:ShowTooltip(self);
+    MainFrame.Tooltip:ShowToolbarTooltip(self);
 end
 
 local function ToolbarButton_OnLeave(self)

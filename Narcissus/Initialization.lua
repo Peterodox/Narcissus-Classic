@@ -63,6 +63,7 @@ local DefaultValues = {
     HideTextsWithUI = true,                     --Hide all texts when UI is hidden
 
     LoopAnimation = false,                      --Photo Mode Loop Animation
+    SpeedyScreenshotAlert = true,               --Make "Screen Captured" message disappear faster
 
     --# NPC
     SearchRelatives = false,                    --Search for NPCs with the same last name

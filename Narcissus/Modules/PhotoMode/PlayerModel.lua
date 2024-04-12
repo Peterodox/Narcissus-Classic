@@ -1315,7 +1315,7 @@ function Narci_LayerButton_OnLoad(self)
 	AlphaButton.isOn = false;
 	if ID == 1 then
 		--Equipment Slots Visibility
-		self.Label:SetText(NARCI_EQUIPMENTSLOTS);
+		self.Label:SetText(L["Equipment Slots"]);
 		self.Icon:SetTexCoord(0.5, 0.703125, 0.703125, 0.890625);
 		self:SetScript("OnClick", SlotLayerButton_OnClick);
 		self:SetScript("OnShow", SlotLayerButton_OnShow);
@@ -1454,9 +1454,9 @@ end
 
 local animationIDPresets = {
 	--from right to left
-	[1] = {110, 48, 109, 29, ["name"] = NARCI_RANGED_WEAPON,},
-	[2] = {962, 1242, 1240, 1076, ["name"] = "Melee Animation",},	--NARCI_MELEE_WEAPON
-	[3] = {124, 51, 874, 940, ["name"] = NARCI_SPELLCASTING,},
+	[1] = {110, 48, 109, 29, ["name"] = L["Ranged Weapon"],},
+	[2] = {962, 1242, 1240, 1076, ["name"] = L["Melee Animation"],},
+	[3] = {124, 51, 874, 940, ["name"] = L["Spellcasting"],},
 }
 
 function Narci_AnimationOptionFrame_OnLoad(self)
@@ -2615,7 +2615,7 @@ function Narci_ModelIndexButton_OnClick(self, button)
 				self.ID:Hide();
 				self.Icon:SetTexCoord(0.5, 0.75, 0, 1);
 				self.isModelHidden = true;
-				self.Status:SetText(NARCI_GROUP_PHOTO_STATUS_HIDDEN);
+				self.Status:SetText(L["Hidden"]);
 				self:SetModelType("hidden");
 			else
 				state = true;
@@ -4192,7 +4192,7 @@ function NarciModelIndexButtonMixin:OnEnter()
 	if self:GetParent().UpdateFrame:IsShown() then return; end;
 	if self.hasModel then
 		if self.isModelHidden then
-			self.Status:SetText(NARCI_GROUP_PHOTO_STATUS_HIDDEN);
+			self.Status:SetText(L["Hidden"]);
 		else
 			self.Status:SetText(nil);
 		end

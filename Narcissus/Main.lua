@@ -37,6 +37,7 @@ local InCombatLockdown = InCombatLockdown;
 local PlayLetteboxAnimation = NarciAPI_LetterboxAnimation;
 local GetToolbarButtonByButtonType = addon.GetToolbarButtonByButtonType;
 local GetItemInfoInstant = GetItemInfoInstant;
+local ConfirmBinding = addon.ConfirmBinding;
 
 local Narci_AlertFrame_Autohide = Narci_AlertFrame_Autohide;
 local C_Item = C_Item;
@@ -46,8 +47,6 @@ local ItemLocation = ItemLocation;
 local GetAlternateFormInfo = C_PlayerInfo.GetAlternateFormInfo or HasAlternateForm;
 
 local floor = math.floor;
-local sin = math.sin;
-local cos = math.cos;
 local max = math.max;
 
 local UIParent = _G.UIParent;
@@ -66,12 +65,6 @@ local NarciClassicAPI = NarciClassicAPI;
 local EquipmentManagerAPI = NarciClassicAPI.EquipmentManager;
 local EngravingSlotUtil = addon.EngravingSlotUtil;
 
-
-hooksecurefunc("StaticPopup_Show", function(name)
-	if name == "EXPERIMENTAL_CVAR_WARNING" then
-		StaticPopup_Hide(name);
-	end
-end)
 
 local EL = CreateFrame("Frame");	--Event Listener
 EL:Hide();
@@ -2110,6 +2103,7 @@ function NarciEquipmentFlyoutButtonMixin:OnClick(button, down, isGamepad)
 		local action = EquipmentManagerAPI.EquipItemByLocation(self.location, self.slotID)
 		if action then
 			self:AnchorAlertFrame();
+			ConfirmBinding();
 			EquipmentManagerAPI.RunAction(action)
 		end
 		self:Disable();
@@ -3837,3 +3831,6 @@ do
 		end
 	end
 end
+
+
+UIParent:UnregisterEvent("EXPERIMENTAL_CVAR_CONFIRMATION_NEEDED");  --Disable EXPERIMENTAL_CVAR_WARNING

@@ -78,7 +78,6 @@ L["Minimap Tooltip Set Scale"] = "设置缩放: |cffffffff/narci [有效范围 0
 L["Corrupted Item Parser"] = "|cffffffff打开腐蚀物品链接解析器|r";
 L["Toggle Dressing Room"] = "|cffffffff打开"..DRESSUP_FRAME.."|r";
 
-NARCI_CLIPBOARD = "剪切板";
 L["Layout"] = "布局";
 L["Symmetry"] = "对称";
 L["Asymmetry"] = "非对称";
@@ -88,12 +87,12 @@ L["Plain Text"] = "纯文本";
 L["BB Code"] = "BB Code";
 L["Markdown"] = "Markdown";
 L["Export Includes"] = "在导出中包含...";
-NARCI_ITEM_ID = "物品ID";
-
 L["3D Model"] = "3D模型";
-NARCI_EQUIPMENTSLOTS = "装备栏位";
 
 --偏好设定--
+L["Override"] = "覆盖按键";
+L["Invalid Key"] = "无效的组合键";
+
 L["Interface"] = "界面";
 L["Themes"] = "主题";
 L["Camera"] = "镜头";
@@ -111,8 +110,6 @@ L["Text Width"] = "文本宽度";
 L["Hotkey"] = "快捷键";
 L["Double Tap"] = "启用双击";
 L["Double Tap Description"] = "连按两下打开角色面板的快捷键来打开此插件。"
-NARCI_OVERRIDE = "是否覆盖";
-NARCI_INVALID_KEY = "无效的组合键";
 L["Minimap Button"] = "小地图按钮";
 L["Shortcuts"] = "快捷方式";
 L["Image Filter"] = "滤镜";
@@ -148,7 +145,6 @@ L["Gemma"] = "\"Gemma\"";
 L["Gemma Description"] = "在你为一件物品镶嵌宝石时，显示可用的宝石列表。"
 L["Dressing Room"] = "试衣间"
 L["Dressing Room Description"] = "增大试衣间窗口大小，并使你能够通过试衣间浏览、复制其他玩家的幻化调料包。";
-NARCI_REQUIRE_RELOAD = "|cffff5050需要重载UI才能使设置生效。|r";
 L["Show Detailed Stats"] = "显示详尽的属性信息";
 L["Tooltip Color"] = "小提示颜色";
 L["Entrance Visual"] = "登场效果";
@@ -215,21 +211,25 @@ L["Equipment Manager Description"] = "保存装备方案来快速切换装备。
 L["Equipment Manager Replacement"] = NARCI_COLOR_YELLOW.. "此按钮已被隐藏，因为你正在使用游戏自带的装备管理。|r";
 L["Item Flyout"] = "可用装备菜单";
 L["Item Flyout Description"] = string.format("将鼠标悬停在装备栏位上并按下%s键以显示合适的物品。", NARCI_MODIFIER_ALT);
-
+L["Camera Reset Notification"] = "Camera offset has been reset to zero. If you wish to disable this feature, go to Preferences - Camera, then toggle off Camera Safe Mode.";
+L["Binding Name Open Narcissus"] = "打开Narcissus角色面板";
+L["Developer Colon"] = "开发者：";
+L["Project Page"] = "项目页面";
+L["Press Copy Yellow"] = "按 |cffffd100".. NARCI_SHORTCUTS_COPY .."|r 来复制";
+L["New Option"] = NARCI_NEW_ENTRY_PREFIX.." 新".."|r"
+L["Expansion Features"] = "资料片特色";
+L["Loop Animation"] = "循环动画";
+L["Speedy Screenshot Alert"] = "让截图成功通知更快地消失";
 
 --模型控制面板--
-NARCI_STAND_IDLY = "普通站姿";
-NARCI_RANGED_WEAPON = "远程武器";
-NARCI_MELEE_WEAPON = "近战武器";
-NARCI_SPELLCASTING = "施法动作";
-NARCI_ANIMATION_ID = "动画ID";
-NARCI_LINK_LIGHT_SETTINGS = "关联灯光设置";
-NARCI_LINK_MODEL_SCALE = "关联模型比例";
-NARCI_GROUP_PHOTO_AVAILABLE = "现已加入Narcissus插件";
-NARCI_GROUP_PHOTO_NOTIFICATION = "请选择一个目标。";
-NARCI_GROUP_PHOTO_STATUS_HIDDEN = "隐藏";
-NARCI_DIRECTIONAL_AMBIENT_LIGHT = "平行光/环境光";
-NARCI_DIRECTIONAL_AMBIENT_LIGHT_TOOLTIP = "在以下两种灯光间切换：\n- 可以被模型遮挡并投射阴影的平行光\n- 影响整个模型表面的环境光";
+L["Ranged Weapon"] = "远程武器";
+L["Melee Animation"] = "近战武器";
+L["Spellcasting"] = "施法动作";
+L["Link Light Sources"] = "关联灯光设置";
+L["Link Model Scales"] = "关联模型比例";
+L["Hidden"] = "隐藏";
+L["Light Types"] = "平行光/环境光";
+L["Light Types Tooltip"] = "在以下两种灯光间切换：\n- 可以被模型遮挡并投射阴影的平行光\n- 影响整个模型表面的环境光";
 
 L["Group Photo"] = "合影模式";
 L["Reset"] = "重置";
@@ -264,7 +264,6 @@ L["Shadow"] = "阴影";
 L["Light Source"] = "光源";
 L["Light Source Independent"] = "独立";
 L["Light Source Interconnected"] = "关联";
-
 
 --Animation Browser--
 L["Animation"] = "角色动画";
