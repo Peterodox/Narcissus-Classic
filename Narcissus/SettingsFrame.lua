@@ -1092,8 +1092,8 @@ function AboutTab:CreateTab(parent, anchorTo, fromOffsetY)
     fromOffsetY = fromOffsetY - 24;
 
     local addonPages = {
-        {"Curseforge", "https://wow.curseforge.com/projects/narcissus"};
-        {"Wago", "https://addons.wago.io/addons/narcissus"},
+        {"Curseforge", "https://www.curseforge.com/wow/addons/narcissus-classic"};
+        {"Wago", "https://addons.wago.io/addons/narcissus-classic"},
     };
 
     local numWebsiteButton = #addonPages;

@@ -6,7 +6,7 @@ local PLAYER_ARMOR_TYPE_NAME = "Cloth";
 
 do
 	local _, _, _, tocVersion = GetBuildInfo();
-	EXPANSION_ID = tonumber(string.sub(tocVersion, 0, 1)) or 1;
+	EXPANSION_ID = math.floor(tonumber(tocVersion) / 10000);
 	addon.expansionID = EXPANSION_ID;
 
 	local className, clssFileName, classID = UnitClass("player");
@@ -484,4 +484,124 @@ function NarciClassicAPI.SetCameraTarget(model, x, y, z)
     else
         model:SetCameraTarget(x, y, z);
     end
+end
+
+
+do
+	local GetTalentTabInfo = GetTalentTabInfo;
+	local GetTalentTabNameAndPoints;
+	local IsPlayerInAlteredForm = IsPlayerInAlteredForm;
+
+	if not IsPlayerInAlteredForm then
+		function IsPlayerInAlteredForm()
+			return not C_UnitAuras.WantsAlteredForm("player");
+		end
+	end
+
+	if EXPANSION_ID >= 4 then
+		function GetTalentTabNameAndPoints(index)
+			local name, _, pointsSpent = GetTalentTabInfo(index);
+			return name, pointsSpent
+		end
+	else
+		function GetTalentTabNameAndPoints(index)
+			local name, _, pointsSpent = GetTalentTabInfo(index);
+			return name, pointsSpent
+		end
+	end
+	NarciClassicAPI.GetTalentTabNameAndPoints = GetTalentTabNameAndPoints;
+end
+
+do
+	local WantsAlteredForm = C_UnitAuras and C_UnitAuras.WantsAlteredForm;
+	local HasAlternateForm = HasAlternateForm;
+	local _, RACE_FILE_NAME = UnitRace("player");
+	local IsPlayerInAlteredForm;
+
+    if RACE_FILE_NAME == "Dracthyr" or RACE_FILE_NAME == "Worgen" then
+		if HasAlternateForm then
+			function IsPlayerInAlteredForm()
+				local _, inAlternateForm = HasAlternateForm();
+				return inAlternateForm
+			end
+		else
+			function IsPlayerInAlteredForm()
+				if WantsAlteredForm("player") then
+					return false
+				else
+					return true
+				end
+			end
+		end
+	else
+        function IsPlayerInAlteredForm()
+            return false
+        end
+    end
+
+	NarciClassicAPI.IsPlayerInAlteredForm = IsPlayerInAlteredForm;
+end
+
+do
+	if EXPANSION_ID < 4 then return end;
+
+	local IGNORED_MOG_SLOT = {
+		[11] = true,
+		[12] = true,
+		[13] = true,
+		[14] = true,
+	};
+
+	local function NarciAPI_GetSlotVisualID(slotID)
+		if IGNORED_MOG_SLOT[slotID] then
+			--slotID = 2 ~ Use neck to show right shoulder
+			return 0, 0;
+		end
+	
+		local isSecondaryAppearance;
+		if slotID == 2 then
+			isSecondaryAppearance = true;   --Enum.TransmogModification.Secondary
+			slotID = 3;
+		end
+	
+		local itemLocation = ItemLocation:CreateFromEquipmentSlot(slotID);
+		if not itemLocation or not C_Item.DoesItemExist(itemLocation) then
+			return 0, 0;
+		end
+		local transmogLocation = CreateFromMixins(TransmogLocationMixin);
+		local transmogType = 0;
+		local modification = 0;
+		if slotID == 3 then
+			--Shoulders
+			local itemTransmogInfo = C_Item.GetAppliedItemTransmogInfo(itemLocation);
+			local hasSecondaryAppearance;
+			if itemTransmogInfo then
+				hasSecondaryAppearance = itemTransmogInfo.secondaryAppearanceID ~= 0;   --show direction mark
+			end
+			if isSecondaryAppearance then
+				if not hasSecondaryAppearance then
+					return 0, 0;
+				end
+				modification = 1;       --Enum.TransmogModification : 0 ~ Main, 1 ~ Secondary
+			end
+			transmogLocation:Set(slotID, transmogType, modification);
+			local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasPendingUndo, isHideVisual, itemSubclass = C_Transmog.GetSlotVisualInfo(transmogLocation);
+			if ( appliedSourceID == 0 ) then
+				appliedSourceID = baseSourceID;
+				appliedVisualID = baseVisualID;
+			end
+			return appliedSourceID, appliedVisualID, hasSecondaryAppearance;
+		else
+			transmogLocation:Set(slotID, transmogType, modification);
+	
+			local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasPendingUndo, isHideVisual, itemSubclass = C_Transmog.GetSlotVisualInfo(transmogLocation);
+			if ( appliedSourceID == 0 ) then
+				appliedSourceID = baseSourceID;
+				appliedVisualID = baseVisualID;
+			end
+	
+			return appliedSourceID, appliedVisualID;
+		end
+	end
+	NarciClassicAPI.GetSlotVisualID = NarciAPI_GetSlotVisualID;
 end

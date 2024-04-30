@@ -11,4 +11,5 @@
     <Script file="ScrollFrame.lua"/>
     <Script file="TooltipParser.lua"/>
     <Script file="CharacterProfile.lua"/>
+    <Script file="TransmogDataProvider.lua"/>
 </Ui>

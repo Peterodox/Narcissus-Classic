@@ -202,7 +202,7 @@ local function ReAssignRaceID(raceID, custom)
 	elseif raceID == 34 then	--DarkIron
 		raceID = 3;
 	elseif raceID == 22 then	--Worgen
-		local _, inAlternateForm = HasAlternateForm();
+		local inAlternateForm = NarciClassicAPI.IsPlayerInAlteredForm();
 		if inAlternateForm and not custom then		--Human form is Worgen's alternate form
 			raceID = 1;
 		end

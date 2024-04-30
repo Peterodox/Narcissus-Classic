@@ -388,6 +388,14 @@ end
 
 NarciAPI.GetItemQualityColorByItemID = GetCustomQualityColorByItemID;
 
+local function GetCustomQualityHexColor(itemQuality)
+    if (not itemQuality) or (not customQualityColors[itemQuality]) then
+        itemQuality = 1;
+    end
+    return customQualityColors[itemQuality][4]
+end
+
+NarciAPI.GetItemQualityHexColor = GetCustomQualityHexColor;
 
 NarciAPI.GetItemQualityColorTable = function()
     local newTable = {};

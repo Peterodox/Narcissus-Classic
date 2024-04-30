@@ -396,7 +396,7 @@ local function GetEnchantTextByItemLink(itemLink, colorized)
 
     local _, _, _, linkType, linkID, enchantID = split(":|H", itemLink);
 
-    if enchantID then
+    if enchantID and enchantID ~= "" then
         local link = "item:2092:"..enchantID;
 
         TP:SetOwner(UIParent, "ANCHOR_PRESERVE");

@@ -15,7 +15,8 @@ local L = Narci.L;
 local VIGNETTE_ALPHA = 0.5;
 local IS_OPENED = false;									--Addon was opened by clicking
 local MOG_MODE = false;
-local xmogMode = 0;											-- 0 off	1 "Texts Only" 	2 "Texts & Model"
+local XMOG_MODE = 0;										-- 0 off	1 "Texts Only" 	2 "Texts & Model"
+local CAN_MOG = C_TransmogCollection and C_TransmogCollection.GetSourceInfo ~= nil;
 
 local NarciAPI = NarciAPI;
 local GetItemEnchantID = NarciAPI.GetItemEnchantID;
@@ -36,6 +37,7 @@ local GetItemInfo = GetItemInfo;
 local InCombatLockdown = InCombatLockdown;
 local PlayLetteboxAnimation = NarciAPI_LetterboxAnimation;
 local GetToolbarButtonByButtonType = addon.GetToolbarButtonByButtonType;
+local TransmogDataProvider = addon.TransmogDataProvider;
 local GetItemInfoInstant = GetItemInfoInstant;
 local ConfirmBinding = addon.ConfirmBinding;
 
@@ -53,7 +55,6 @@ local UIParent = _G.UIParent;
 local Toolbar = NarciScreenshotToolbar;
 local EquipmentFlyoutFrame;
 local ItemLevelFrame;
-local MiniButton;
 local ItemTooltip;
 local FlyoutBlackScreen;
 
@@ -403,7 +404,7 @@ end
 
 function CameraUtil:GetRaceKey_Worgen()
 	local raceKey;
-	local inAlternateForm = IsPlayerInAlteredForm();
+	local inAlternateForm = NarciClassicAPI.IsPlayerInAlteredForm();
 	if inAlternateForm then
 		--Human
 		raceKey = 1;
@@ -415,7 +416,7 @@ end
 
 function CameraUtil:GetRaceKey_Dracthyr()
 	local raceKey;
-	local inAlternateForm = IsPlayerInAlteredForm();
+	local inAlternateForm = NarciClassicAPI.IsPlayerInAlteredForm();
 	if inAlternateForm then
 		--Visage
 		raceKey = 52;
@@ -632,13 +633,13 @@ end
 ---Camera
 --[[
 hooksecurefunc("CameraZoomIn", function(increment)
-	if IS_OPENED and (xmogMode ~= 1) then
+	if IS_OPENED and (XMOG_MODE ~= 1) then
 		UpdateShoulderCVar:Start(-increment);
 	end
 end)
 
 hooksecurefunc("CameraZoomOut", function(increment)
-	if IS_OPENED and (xmogMode ~= 1)then
+	if IS_OPENED and (XMOG_MODE ~= 1)then
 		UpdateShoulderCVar:Start(increment);
 	end
 end)
@@ -946,9 +947,9 @@ function Narci:EmergencyStop()
 	Narci_Attribute:Hide();
 	Narci_Vignette:Hide();
 	IS_OPENED = false;
-	xmogMode = 0;
+	XMOG_MODE = 0;
 	MogModeOffset = 0;
-	NarciPlayerModelFrame1.xmogMode = 0;
+	NarciPlayerModelFrame1.XMOG_MODE = 0;
 	EL:Hide();
 end
 
@@ -1377,105 +1378,169 @@ function NarciEquipmentSlotMixin:Refresh(forceRefresh)
 
 	local bR, bG, bB;		--Item Name Color
 	if C_Item.DoesItemExist(itemLocation) then
-		self:TrackCooldown();
-		self:DisplayDirectionMark(false);
-		self.Icon:SetDesaturated(false)
-		self.Name:Show();
-		self.ItemLevel:Show();
-		self.GradientBackground:Show();
-		self.hyperlink = nil;
-		self.sourcePlainText = nil;
-		--[[
-		local current, maximum = GetInventoryItemDurability(slotID);
-		if current and maximum then
-			self.durability = (current / maximum);
-		end
-		--]]
-		itemLink = C_Item.GetItemLink(itemLocation);
-		
-		if validForTempEnchant[slotID] then
-			local hasTempEnchant = NarciTempEnchantIndicatorController:InitFromSlotButton(self);
-			if hasTempEnchant ~= self.hasTempEnchant then
-				self.hasTempEnchant = hasTempEnchant;
+		if CAN_MOG and MOG_MODE then
+			self:UntrackCooldown();
+			self:UntrackTempEnchant();
+			self:HideVFX();
+			self.itemLink = nil;
+			self.isSlotHidden = false;	--Undress an item from player model
+			self.RuneSlot:Hide();
+			self.GradientBackground:Show();
+			local appliedSourceID, appliedVisualID, hasSecondaryAppearance = NarciClassicAPI.GetSlotVisualID(slotID);
+			self.sourceID = appliedSourceID;
+
+			if appliedVisualID > 0 then
+				local sourceInfo = C_TransmogCollection.GetSourceInfo(appliedSourceID);
+				itemName = sourceInfo and sourceInfo.name;
+				if not itemName or itemName == "" then
+					QueueFrame:Add(self, self.Refresh);
+					return
+				end
+				self.itemID = sourceInfo.itemID;
+				itemQuality = sourceInfo.quality;
+				self.itemModID = sourceInfo.itemModID;
+				itemIcon = C_TransmogCollection.GetSourceIcon(appliedSourceID);
+
+				effectiveLvl = TransmogDataProvider:GetSpecialItemSourceText(appliedSourceID, self.itemID, self.itemModID);
+
+				if effectiveLvl then
+					self.sourcePlainText = NarciAPI.RemoveColorString(effectiveLvl);
+					_, _, self.hyperlink = TransmogDataProvider:GetFormattedSourceText(sourceInfo);
+				else
+					effectiveLvl, self.sourcePlainText, self.hyperlink = TransmogDataProvider:GetFormattedSourceText(sourceInfo);
+				end
+
+				if self.hyperlink then
+					_, self.hyperlink = GetItemInfo(self.hyperlink);																		--original hyperlink cannot be printed (workaround)
+				end
+
+				local bonusID;
+				if itemQuality == 6 then
+					if slotID == 16 then
+						bonusID = (sourceInfo.itemModID or 0);	--Artifact use itemModID "7V0" + modID - 1
+					else
+						bonusID = 0;
+					end
+				end
+				self.bonusID = bonusID;
+
+				if effectiveLvl == nil then
+					effectiveLvl = TransmogDataProvider:GetSpecialItemSourceText(appliedSourceID, self.itemID, self.itemModID) or " ";
+				end
+
+
+			else	--irrelevant slot
+				itemName = " ";
+				itemQuality = 0;
+				itemIcon = GetInventoryItemTexture("player", slotID);
+				self.Icon:SetDesaturated(true);
+				self.Name:Hide();
+				self.ItemLevel:Hide();
+				self.GradientBackground:Hide();
+				self.bonusID = nil;
+			end
+			self:DisplayDirectionMark(hasSecondaryAppearance, itemQuality);
+		else
+			self:TrackCooldown();
+			self:DisplayDirectionMark(false);
+			self.Icon:SetDesaturated(false)
+			self.Name:Show();
+			self.ItemLevel:Show();
+			self.GradientBackground:Show();
+			self.hyperlink = nil;
+			self.sourcePlainText = nil;
+			--[[
+			local current, maximum = GetInventoryItemDurability(slotID);
+			if current and maximum then
+				self.durability = (current / maximum);
+			end
+			--]]
+			itemLink = C_Item.GetItemLink(itemLocation);
+			
+			if validForTempEnchant[slotID] then
+				local hasTempEnchant = NarciTempEnchantIndicatorController:InitFromSlotButton(self);
+				if hasTempEnchant ~= self.hasTempEnchant then
+					self.hasTempEnchant = hasTempEnchant;
+				else
+					if itemLink == self.itemLink then
+						return
+					end
+				end
 			else
-				if itemLink == self.itemLink then
+				if itemLink == self.itemLink and (slotID ~= 18 and slotID ~= 0) then
 					return
 				end
 			end
-		else
-			if itemLink == self.itemLink and (slotID ~= 18 and slotID ~= 0) then
+			
+			local itemVFX;
+			local itemID = GetItemInfoInstant(itemLink);
+			borderTexKey, itemVFX, bR, bG, bB = GetBorderArtByItemID(itemID);
+
+			itemIcon = GetInventoryItemTexture("player", slotID);
+			itemName = C_Item.GetItemName(itemLocation);
+			itemQuality = C_Item.GetItemQuality(itemLocation);
+			effectiveLvl = C_Item.GetCurrentItemLevel(itemLocation);
+			self.ItemLevelCenter.ItemLevel:SetText(effectiveLvl);
+
+			gemName, gemLink = IsItemSocketable(itemLink);
+
+			self.GemSlot.ItemLevel = effectiveLvl;
+			self.gemLink = gemLink;		--Later used in OnEnter func in NarciSocketing.lua
+
+			local enchantText = GetEnchantTextByItemLink(itemLink, true);	--GetItemEnchantText(itemLink, true);
+			local engravingName = EngravingSlotUtil:UpdateSlotButton(self);	--Engraving has itemEnchantmentID but not shown in the itemlink
+
+			if engravingName then
+				if enchantText then
+					enchantText = engravingName.."  "..enchantText;
+				else
+					enchantText = engravingName;
+				end
+			end
+
+			if enchantText then
+				if self.isRight then
+					effectiveLvl = enchantText.."  "..effectiveLvl;
+				else
+					effectiveLvl = effectiveLvl.."  "..enchantText;
+				end
+			end
+
+			--Enchant Frame--
+			if itemQuality then	--and not isRuneforgeLegendary
+				DisplayRuneSlot(self, slotID, itemQuality, itemLink);
+			end
+
+			--Item Visual Effects
+			if itemVFX then
+				self:ShowVFX(itemVFX);
+			else
+				self:HideVFX();
+			end
+
+			if not itemName or itemName == "" then
+				QueueFrame:Add(self, self.Refresh);
 				return
 			end
-		end
-		
-		local itemVFX;
-		local itemID = GetItemInfoInstant(itemLink);
-		borderTexKey, itemVFX, bR, bG, bB = GetBorderArtByItemID(itemID);
 
-		itemIcon = GetInventoryItemTexture("player", slotID);
-		itemName = C_Item.GetItemName(itemLocation);
-		itemQuality = C_Item.GetItemQuality(itemLocation);
-		effectiveLvl = C_Item.GetCurrentItemLevel(itemLocation);
-		self.ItemLevelCenter.ItemLevel:SetText(effectiveLvl);
-
-		gemName, gemLink = IsItemSocketable(itemLink);
-
-		self.GemSlot.ItemLevel = effectiveLvl;
-		self.gemLink = gemLink;		--Later used in OnEnter func in NarciSocketing.lua
-
-		local enchantText = GetEnchantTextByItemLink(itemLink, true);	--GetItemEnchantText(itemLink, true);
-		local engravingName = EngravingSlotUtil:UpdateSlotButton(self);	--Engraving has itemEnchantmentID but not shown in the itemlink
-
-		if engravingName then
-			if enchantText then
-				enchantText = engravingName.."  "..enchantText;
-			else
-				enchantText = engravingName;
-			end
-		end
-
-		if enchantText then
-			if self.isRight then
-				effectiveLvl = enchantText.."  "..effectiveLvl;
-			else
-				effectiveLvl = effectiveLvl.."  "..enchantText;
-			end
-		end
-
-		--Enchant Frame--
-		if itemQuality then	--and not isRuneforgeLegendary
-			DisplayRuneSlot(self, slotID, itemQuality, itemLink);
-		end
-
-		--Item Visual Effects
-		if itemVFX then
-			self:ShowVFX(itemVFX);
-		else
-			self:HideVFX();
-		end
-
-		if not itemName or itemName == "" then
-			QueueFrame:Add(self, self.Refresh);
-			return
-		end
-
-		--Thrown weapon count
-		if slotID == 18 then
-			local classID, subclassID = select(6, GetItemInfoInstant(itemID));
-			if classID == 2 and subclassID == 16 then
-				local quantity = GetItemCount(itemID);
-				if quantity <= 50 then
-					quantity = "|cffff0000x"..quantity.."|r";
-				elseif quantity <= 100 then
-					quantity = "|cffffD100x"..quantity.."|r";
-				else
-					quantity = "x"..quantity;
+			--Thrown weapon count
+			if slotID == 18 then
+				local classID, subclassID = select(6, GetItemInfoInstant(itemID));
+				if classID == 2 and subclassID == 16 then
+					local quantity = GetItemCount(itemID);
+					if quantity <= 50 then
+						quantity = "|cffff0000x"..quantity.."|r";
+					elseif quantity <= 100 then
+						quantity = "|cffffD100x"..quantity.."|r";
+					else
+						quantity = "x"..quantity;
+					end
+					effectiveLvl = effectiveLvl.."  "..quantity;
 				end
-				effectiveLvl = effectiveLvl.."  "..quantity;
 			end
-		end
 
-		self.itemLink = itemLink;
+			self.itemLink = itemLink;
+		end
 	else
 		self:UntrackCooldown();
 		self:UntrackTempEnchant();
@@ -1968,7 +2033,7 @@ local function UpdateCharacterInfoFrame(newLevel)
 	local maxPoints = 0;
 
 	for i = 1, GetNumTalentTabs() do
-		talentTabName, _, pointsSpent = GetTalentTabInfo(i);
+		talentTabName, _, pointsSpent = NarciClassicAPI.GetTalentTabNameAndPoints(i);
 		if pointsSpent and pointsSpent > maxPoints then
 			maxPoints = pointsSpent;
 			currentSpecName = talentTabName;
@@ -2191,7 +2256,7 @@ local function ShowLessItemInfo(self, state)
 end
 
 local function ShowAllItemInfo()
-	if xmogMode ~=0 then
+	if XMOG_MODE ~=0 then
 		return;
 	end
 
@@ -2775,7 +2840,7 @@ end
 
 local function UseXmogLayout()
 	MOG_MODE_OFFSET = 0.2;
-	NarciPlayerModelFrame1.xmogMode = 2;
+	NarciPlayerModelFrame1.XMOG_MODE = 2;
 	if Narci_Character:IsVisible() then
 		FadeFrame(NarciModel_RightGradient, 0.5, 1);
 	end
@@ -2804,7 +2869,7 @@ local function ActivateMogMode()
 		FadeFrame(Narci_Attribute, 0.5, 0)
 		FadeFrame(Narci_XmogNameFrame, 0.2, 1, 0)
 		MOG_MODE_OFFSET = 0.2;
-		NarciPlayerModelFrame1.xmogMode = 2;
+		NarciPlayerModelFrame1.XMOG_MODE = 2;
 		MsgAlertContainer:Display();
 		UseXmogLayout();
 	else

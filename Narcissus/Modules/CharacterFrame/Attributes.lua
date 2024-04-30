@@ -387,14 +387,14 @@ local function CharacterDamageFrame_OnEnter(self)
 	-- Main hand weapon
 	DefaultTooltip:SetOwner(self, "ANCHOR_NONE");
 	DefaultTooltip:SetText(INVTYPE_WEAPONMAINHAND, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
-	DefaultTooltip:AddDoubleLine(ATTACK_SPEED_SECONDS, format("%.2F", self.attackSpeed), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);	--ATTACK_SPEED_COLON
+	DefaultTooltip:AddDoubleLine(ATTACK_SPEED_SECONDS or ATTACK_SPEED, format("%.2F", self.attackSpeed), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);	--ATTACK_SPEED_COLON
 	DefaultTooltip:AddDoubleLine(DAMAGE_COLON, self.damage, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 	DefaultTooltip:AddDoubleLine(DAMAGE_PER_SECOND, format("%.1F", self.dps), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 	-- Check for offhand weapon
 	if ( self.offhandAttackSpeed ) then
 		DefaultTooltip:AddLine(" "); -- Blank line.
 		DefaultTooltip:AddLine(INVTYPE_WEAPONOFFHAND, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
-		DefaultTooltip:AddDoubleLine(ATTACK_SPEED_SECONDS, format("%.2F", self.offhandAttackSpeed), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+		DefaultTooltip:AddDoubleLine(ATTACK_SPEED_SECONDS or ATTACK_SPEED, format("%.2F", self.offhandAttackSpeed), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 		DefaultTooltip:AddDoubleLine(DAMAGE_COLON, self.offhandDamage, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 		DefaultTooltip:AddDoubleLine(DAMAGE_PER_SECOND, format("%.1F", self.offhandDps), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
 	end
@@ -1088,12 +1088,22 @@ function UpdateFunc.Intellect(object)
 	local effectiveStat = UpdateFunc.Primary(object, 4);
 
 	local baseInt = min(20, effectiveStat);
-	local moreInt = effectiveStat - baseInt
+	local moreInt = effectiveStat - baseInt;
+
 	if ( UnitHasMana("player") ) then
 		object.tooltip2 = format(object.tooltipFormat, baseInt + moreInt*MANA_PER_INTELLECT, GetSpellCritChanceFromIntellect("player"));
 	else
-		object.tooltip2 = nil;
+		local stat = "INTELLECT";
+		local _, classFileName = UnitClass("player");
+		local classStatText = _G[string.upper(classFileName).."_"..stat.."_".."TOOLTIP"];
+
+		if ( not classStatText ) then
+			classStatText = _G["DEFAULT".."_"..stat.."_".."TOOLTIP"];
+		end
+
+		object.tooltip2 = classStatText;
 	end
+
 	local petInt = ComputePetBonus("PET_BONUS_INT", effectiveStat);
 	if( petInt > 0 ) then
 		if ( not object.tooltip2 ) then
@@ -1117,6 +1127,56 @@ end
 
 function UpdateFunc.Null(object)
 	UpdateFunc.Primary(object, 5);
+end
+
+local function Mastery_OnEnter(object)
+	local CR_MASTERY = 26;
+
+	DefaultTooltip:SetOwner(object, "ANCHOR_NONE");
+
+	local _, class = UnitClass("player");
+	local mastery = GetMastery();
+	local masteryBonus = GetCombatRatingBonus(CR_MASTERY);
+	local title = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_MASTERY).." "..format("%.2F", mastery)..FONT_COLOR_CODE_CLOSE;
+	if (masteryBonus > 0) then
+		title = title..HIGHLIGHT_FONT_COLOR_CODE.." ("..format("%.2F", mastery-masteryBonus)..FONT_COLOR_CODE_CLOSE..GREEN_FONT_COLOR_CODE.."+"..format("%.2F", masteryBonus)..FONT_COLOR_CODE_CLOSE..HIGHLIGHT_FONT_COLOR_CODE..")";
+	end
+
+	DefaultTooltip:SetText(title);
+
+	local masteryKnown = IsSpellKnown(CLASS_MASTERY_SPELLS[class]);
+	local primaryTalentTree = GetPrimaryTalentTree();
+	if (masteryKnown and primaryTalentTree) then
+		local masterySpell, masterySpell2 = GetTalentTreeMasterySpells(primaryTalentTree);
+		if (masterySpell) then
+			DefaultTooltip:AddSpellByID(masterySpell);
+		end
+		if (masterySpell2) then
+			DefaultTooltip:AddLine(" ");
+			DefaultTooltip:AddSpellByID(masterySpell2);
+		end
+		DefaultTooltip:AddLine(" ");
+		DefaultTooltip:AddLine(format(STAT_MASTERY_TOOLTIP, GetCombatRating(CR_MASTERY), masteryBonus), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+	else
+		DefaultTooltip:AddLine(format(STAT_MASTERY_TOOLTIP, GetCombatRating(CR_MASTERY), masteryBonus), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+		DefaultTooltip:AddLine(" ");
+		if (masteryKnown) then
+			DefaultTooltip:AddLine(STAT_MASTERY_TOOLTIP_NO_TALENT_SPEC, GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b, true);
+		else
+			DefaultTooltip:AddLine(STAT_MASTERY_TOOLTIP_NOT_KNOWN, GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b, true);
+		end
+	end
+
+	DefaultTooltip:SetPoint("TOPRIGHT", object, "TOPLEFT", -4, 0)
+	DefaultTooltip:ShowTooltip();
+end
+
+function UpdateFunc.Mastery(object)
+	local labelText = STAT_MASTERY;
+	local mastery = GetMastery();
+	mastery = format("%.2F", mastery);
+	object:SetLabelAndValue(labelText, mastery);
+	object:SetScript("OnEnter", Mastery_OnEnter);
 end
 
 
@@ -1266,6 +1326,10 @@ do
 		};
 	elseif expansionID == 3 then
 		GetHitTooltipText = GetHitTooltip_Wrath;
+	elseif expansionID == 4 then
+		table.insert(LAYOUTS.melee, "Mastery");
+		table.insert(LAYOUTS.ranged, "Mastery");
+		table.insert(LAYOUTS.spell, "Mastery");
     end
 end
 
@@ -1349,8 +1413,9 @@ function AttributeController:BuildResistanceFrame()
 		end
 	end
 
+	local offset = 0;	-- -24
 	self.magicRes[1]:ClearAllPoints();
-	self.magicRes[1]:SetPoint("TOPLEFT", self.buttons[self.numButtons], "BOTTOMLEFT", 0, -24.0);
+	self.magicRes[1]:SetPoint("TOPLEFT", self.buttons[self.numButtons], "BOTTOMLEFT", 0, offset);
 end
 
 function AttributeController:Build(layoutName, initialOffsetY, idOffset)
