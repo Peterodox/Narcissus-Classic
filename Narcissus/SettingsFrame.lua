@@ -1745,6 +1745,14 @@ local function PaperDollFlyoutToggle_SetState(self, state)
     NarciAPI.SetUsePaperDollFlyout(state);
 end
 
+local function WardrobeTransmog_SetState(self, state)
+    SettingFunctions.EnableWardrobeTransmogModule(state);
+end
+
+local function IsTransmogAvailable()
+    return NarciClassicAPI.IsTransmogAvailable()
+end
+
 
 local function UpdateAlignment()
     MinimapButtonSkin:UpdateAlignment();
@@ -2077,6 +2085,7 @@ local Categories = {
             --{type = "subheader", level = 1, text = L["Expansion Features"], extraTopPadding = 1},
             {type = "checkbox", level = 1, key = "EquipmentSetManager", text = PAPERDOLL_EQUIPMENTMANAGER,  description = L["Equipment Manager Description"], onValueChangedFunc = EquipmentManagerToggle_SetState, showFeaturePreview = true, onEnterFunc = FeaturePreview.ShowPreview, onLeaveFunc = FeaturePreview.HidePreview},
             {type = "checkbox", level = 1, key = "ItemFlyout", text = L["Item Flyout"],  description = L["Item Flyout Description"], onValueChangedFunc = PaperDollFlyoutToggle_SetState, showFeaturePreview = true, onEnterFunc = FeaturePreview.ShowPreview, onLeaveFunc = FeaturePreview.HidePreview},
+            {type = "checkbox", level = 1, key = "TransmogOutfitSelect", text = L["Module Transmog Name"], description = L["Module Transmog Desc"], validityCheckFunc = IsTransmogAvailable, onValueChangedFunc = WardrobeTransmog_SetState},
         },
     },
 

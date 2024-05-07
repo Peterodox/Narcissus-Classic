@@ -161,3 +161,95 @@ function ProfileAPI:GetPlayerInfo(uid, key)
         end
     end
 end
+
+function ProfileAPI:SaveClassicOutfit(name, icon, itemTransmogInfoList)
+    self:Init();
+
+    if not CharacterData.classicOutfits then
+        CharacterData.classicOutfits = {};
+    end
+
+    local string = TransmogDataProvider:ConvertClassicTransmogListToString(itemTransmogInfoList)
+
+    local outfitData = {
+        n = name,
+        i = icon,
+        t = time(),
+        s = string,
+    };
+
+    table.insert(CharacterData.classicOutfits, outfitData);
+
+    return true
+end
+
+function ProfileAPI:GetNumSavedClassicOutfits()
+    self:Init();
+
+    if CharacterData.classicOutfits then
+        return #CharacterData.classicOutfits
+    end
+
+    return 0
+end
+
+function ProfileAPI:GetClassicOutfitInfo(id)
+    self:Init();
+
+    if CharacterData.classicOutfits then
+        return CharacterData.classicOutfits[id];
+    end
+end
+
+function ProfileAPI:GetLastAppliedOutfitID()
+    self:Init();
+
+    local outfitID = CharacterData.lastAppliedOutfitID;
+    if outfitID and self:GetClassicOutfitInfo(outfitID) ~= nil then
+        return outfitID
+    end
+end
+
+function ProfileAPI:SetLastAppliedOutfitID(id)
+    self:Init();
+
+    CharacterData.lastAppliedOutfitID = id;
+end
+
+function ProfileAPI:IsUniqueTransmogString(itemTransmogString)
+    self:Init();
+
+    local isUnique = true;
+    local duplicateOutfitID;
+
+    if CharacterData.classicOutfits then
+        for outfitID, outfitData in ipairs(CharacterData.classicOutfits) do
+            if itemTransmogString == outfitData.s then
+                isUnique = false;
+                duplicateOutfitID = outfitID;
+                break
+            end
+        end
+    end
+
+    return isUnique, duplicateOutfitID
+end
+
+function ProfileAPI:RenameClassicOutfit(outfitID, newName)
+    self:Init();
+
+    if CharacterData.classicOutfits and CharacterData.classicOutfits[outfitID] then
+        CharacterData.classicOutfits[outfitID].n = newName;
+    end
+end
+
+function ProfileAPI:DeleteClassicOutfit(outfitID)
+    self:Init();
+
+    if CharacterData.classicOutfits and CharacterData.classicOutfits[outfitID] then
+        if outfitID == self:GetLastAppliedOutfitID() then
+            self:SetLastAppliedOutfitID(nil);
+        end
+        table.remove(CharacterData.classicOutfits, outfitID);
+    end
+end

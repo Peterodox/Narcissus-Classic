@@ -580,3 +580,21 @@ L["Showcase Splash 4"] = "录制屏幕然后将视频转换为GIF动图。";
 L["Cycle Spec"] = "按Tab键切换专精";
 L["Paperdoll Splash 1"] = "使用套装指示器？";
 L["Paperdoll Splash 2"] = "选择主题色";
+
+--Outfit Select--
+L["Outfit"] = "外观方案";
+L["Models"] = "模型";
+L["Origin Outfits"] = "原始衣着";
+L["Outfit Owner Format"] = "%s的衣着";
+L["SortMethod Recent"] = "最近";
+L["SortMethod Name"] = "名字";
+
+--Classic--
+L["Wardrobe"] = "衣柜";
+L["Outfit Saved"] = "已保存";
+L["Select Outfit"] = "未选择外观方案";
+L["Default Outfit Name"] = "外观方案";
+
+
+---- Character UI ----
+L["Ammo Slot No Alternative"] = "未找到其他匹配的弹药";

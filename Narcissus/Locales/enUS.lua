@@ -627,6 +627,11 @@ L["SortMethod Name"] = "Name";
 
 --Classic--
 L["Wardrobe"] = "Wardrobe";
+L["Outfit Saved"] = "Saved";
+L["Select Outfit"] = "Select Outfit";
+L["Default Outfit Name"] = "Outfit";
+L["Module Transmog Name"] = TRANSMOGRIFICATION or "Transmogrification";
+L["Module Transmog Desc"] = "Save and load outfits when you are at a Transmogrifier."
 
 ---- Character UI ----
 L["Ammo Slot No Alternative"] = "No other available ammos";

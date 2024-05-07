@@ -1,6 +1,6 @@
 ## Interface: 40400
 ## Plain Title: Narcissus
-## Version: 1.2.0
+## Version: 1.2.1
 
 ## Title: Narcissus
 
@@ -79,3 +79,5 @@ Filters\CameraEffect.xml
 Filters\Letterbox.xml
 
 Guide\Guide.xml
+
+Modules\Wardrobe\Wardrobe.lua

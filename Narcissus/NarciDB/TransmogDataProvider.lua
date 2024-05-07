@@ -619,6 +619,153 @@ function DataProvider:GetSpecialItemSourceText(sourceID, itemID, modID)
     end
 end
 
+do
+    -- CATA Classic:
+    ---- Wardrobe uses DressUpModel instead of ModelScene, doesn't have "GetItemTransmogInfoList"
+
+    local GetSlotVisualInfo = C_Transmog.GetSlotVisualInfo;
+    local GetInventorySlotInfo = GetInventorySlotInfo;
+
+    local CLASSIC_SLOTS = {
+        "HEADSLOT",
+        "SHOULDERSLOT",
+        "BACKSLOT",
+        "CHESTSLOT",
+        "SHIRTSLOT",
+        "TABARDSLOT",
+        "WRISTSLOT",
+        "HANDSSLOT",
+        "WAISTSLOT",
+        "LEGSSLOT",
+        "FEETSLOT",
+        "SECONDARYHANDSLOT",
+        "MAINHANDSLOT",
+        "RANGEDSLOT",
+    };
+
+    local function GetTransmogInfoList()
+        --list = { [slot] = sourceID }
+        local slotID;
+        local transmogLocation = CreateFromMixins(TransmogLocationMixin);
+        local transmogType = 0;
+        local modification = 0;
+        local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasUndo, isHideVisual;
+        local sourceID;
+
+        local list;
+
+        for _, slot in ipairs(CLASSIC_SLOTS) do
+            slotID = GetInventorySlotInfo(slot);
+            transmogLocation:Set(slotID, transmogType, modification);
+            baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasUndo, isHideVisual = GetSlotVisualInfo(transmogLocation);
+
+            if pendingSourceID ~= 0 then
+                sourceID = pendingSourceID;
+            elseif appliedSourceID ~= 0 then
+                sourceID = appliedSourceID;
+            else
+                sourceID = baseSourceID;
+            end
+
+            if sourceID ~= 0 then
+                if not list then
+                    list = {};
+                end
+                list[slotID] = sourceID;
+            end
+        end
+
+        return list
+    end
+
+    local function ApplyTransmogInfoList(list)
+        if not list then return end;
+
+        local categoryID, visualID;
+
+        local TYPE_APPLY = Enum.TransmogPendingType.Apply;
+        local SetPending = C_Transmog.SetPending;
+        local CreateTransmogPendingInfo = TransmogUtil.CreateTransmogPendingInfo;
+
+        local transmogLocation = CreateFromMixins(TransmogLocationMixin);
+        local transmogType = 0;
+        local modification = 0;
+
+        for slotID, sourceID in pairs(list) do
+            categoryID = MogAPI.GetAppearanceSourceInfo(sourceID);
+            local pendingInfo = CreateTransmogPendingInfo(TYPE_APPLY, sourceID, categoryID);
+            transmogLocation:Set(slotID, transmogType, modification);
+            SetPending(transmogLocation, pendingInfo);
+        end
+    end
+
+    function DataProvider:ConvertClassicTransmogListToString(itemTransmogInfoList)
+        if not (itemTransmogInfoList and type(itemTransmogInfoList) == "table") then return end
+
+        local transmogString;
+        local slotString;
+        local primaryID, secondaryID, illusionID;
+        local slotID;
+
+        for _, slot in ipairs(CLASSIC_SLOTS) do
+            slotID = GetInventorySlotInfo(slot);
+            primaryID = itemTransmogInfoList[slotID] or 0;
+            slotString = primaryID;
+
+            if transmogString then
+                transmogString = transmogString..","..slotString;
+            else
+                transmogString = slotString;
+            end
+        end
+
+        return transmogString
+    end
+
+    function DataProvider:ConvertClassicTransmogStringToList(itemTransmogString)
+        if not itemTransmogString then return end;
+        
+        local slotStrings = {strsplit(",", itemTransmogString)};
+
+        local slotString;
+        local primaryID, secondaryID, illusionID;
+        local slotID;
+        local itemTransmogInfoList = {};
+
+        for i, slot in ipairs(CLASSIC_SLOTS) do
+            slotID = GetInventorySlotInfo(slot);
+            slotString = slotStrings[i];
+
+            if slotString then
+                primaryID = FormatAppearanceID(slotString);
+            else
+                primaryID = 0;
+            end
+
+            if primaryID ~= 0 then
+                itemTransmogInfoList[slotID] = primaryID;
+            end
+        end
+
+        return itemTransmogInfoList
+    end
+
+    function DataProvider:GetPendingClassicOutfit()
+        local list = GetTransmogInfoList();
+        if list then
+            return list, (self:ConvertClassicTransmogListToString(list))
+        end
+    end
+
+    function DataProvider:ApplyClassicOutfitString(transmogString)
+        local list = self:ConvertClassicTransmogStringToList(transmogString);
+        if list then
+            ApplyTransmogInfoList(list);
+            return true
+        end
+    end
+end
+
 
 local ArtifactSourceIDXArtifactSetID = {
     [69077] = 3,

@@ -55,6 +55,10 @@ function NarciClassicAPI.GetExpansionName(id)
 	end
 end
 
+NarciClassicAPI.IsTransmogAvailable = function()
+	return EXPANSION_ID >= 4
+end
+
 
 
 local EquipmentManager = {};
