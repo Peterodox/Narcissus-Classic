@@ -1,3 +1,6 @@
+local _, addon = ...
+local API = addon.API;
+
 --Parent: Narci_EquipmentFlyoutFrame (Narcissus.xml)
 local ComparisonFrame, EquipmentFlyoutFrame;
 local IS_GAP_ADJUSTED = false;
@@ -13,6 +16,7 @@ local GetItemLink = C_Item.GetItemLink;
 local GetItemIcon = C_Item.GetItemIcon;
 local GetItemName = C_Item.GetItemName;
 local GetItemQuality = C_Item.GetItemQuality;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 
 local GetCombatRating = GetCombatRating;
 local GetCombatRatingBonus = GetCombatRatingBonus;

@@ -1,3 +1,6 @@
+local _, addon = ...
+local API = addon.API;
+
 --Pre WotLK: Add flyout to paperdoll itembutton for fast swapping items (Alt + Mouseover).
 local FORCE_SHOWN = false;
 
@@ -19,8 +22,8 @@ local GetContainerNumFreeSlots = C_Container.GetContainerNumFreeSlots;
 local IsInventoryItemLocked = IsInventoryItemLocked;
 local PickupInventoryItem = PickupInventoryItem;
 local PickUpItemByItemID = NarciAPI.PickUpItemByItemID;
-local GetItemInfo = GetItemInfo;
-local GetItemCount = GetItemCount;
+local GetItemInfo = API.GetItemInfo;
+local GetItemCount = API.GetItemCount;
 local GetCurrentItemLevel = C_Item.GetCurrentItemLevel;
 local GetItemIcon = C_Item.GetItemIcon;
 local GetItemIconByID = C_Item.GetItemIconByID;
@@ -576,8 +579,6 @@ NarciAPI.SetUsePaperDollFlyout = SetUsePaperDollFlyout;
 
 
 do
-    local _, addon = ...
-
     local SettingFunctions = addon.SettingFunctions;
 
     function SettingFunctions.SetUsePaperDollFlyout(state, db)

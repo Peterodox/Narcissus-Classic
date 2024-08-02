@@ -1,4 +1,9 @@
 local _, addon = ...
+local API = addon.API;
+
+local GetInventoryItemID = GetInventoryItemID;
+local GetItemInfoInstant = API.GetItemInfoInstant;
+local GetItemCount = API.GetItemCount;
 
 local EXPANSION_ID;
 local PLAYER_ARMOR_TYPE = 1;	--1-4  Cloth-Leather-Mail-Plate
@@ -70,15 +75,13 @@ local ITEM_INVENTORY_LOCATION_BANK = ITEM_INVENTORY_LOCATION_BANK;
 local ITEM_INVENTORY_LOCATION_BAGS = ITEM_INVENTORY_LOCATION_BAGS;
 local ITEM_INVENTORY_LOCATION_VOIDSTORAGE = ITEM_INVENTORY_LOCATION_VOIDSTORAGE;
 local ITEM_INVENTORY_BAG_BIT_OFFSET = ITEM_INVENTORY_BAG_BIT_OFFSET;
-local GetInventoryItemID = GetInventoryItemID;
-local GetItemInfoInstant = GetItemInfoInstant;
-local GetItemCount = GetItemCount;
+local ITEM_INVENTORY_BANK_BAG_OFFSET = ITEM_INVENTORY_BANK_BAG_OFFSET;
 
 local EQUIP_ITEM = 1;
 local UNEQUIP_ITEM = 2;
 local SWAP_ITEM = 3;
 
-local function EquipmentManager_UnpackLocation (location)	--Copied from Retail
+local function EquipmentManager_UnpackLocation(location)	--Copied from Retail
 	if ( location < 0 ) then
 		return false, false, false, 0;
 	end
@@ -197,9 +200,9 @@ else
 		if ( UnitAffectingCombat("player") and not INVSLOTS_EQUIPABLE_IN_COMBAT[action.invSlot] ) then
 			return true;
 		end
-	
+
 		--EquipmentManager_UpdateFreeBagSpace();
-	
+
 		action.run = true;
 		if ( action.type == EQUIP_ITEM or action.type == SWAP_ITEM ) then
 			if ( not action.bags ) then
@@ -207,12 +210,12 @@ else
 			else
 				local hasItem = action.invSlot and GetInventoryItemID("player", action.invSlot);
 				local pending = EquipmentManager_EquipContainerItem(action);
-				
+
 				return pending;
 			end
 		elseif ( action.type == UNEQUIP_ITEM ) then
 			ClearCursor();
-	
+
 			if ( IsInventoryItemLocked(action.invSlot) ) then
 				return;
 			else
@@ -460,7 +463,8 @@ function NarciClassicAPI.SetCameraPosition(model, x, y, z)
     if type(x) == "table" then
         x, y, z = x:GetXYZ();
     end
-
+	model:SetCameraPosition(x, y, z);
+	--[[
     if model:IsObjectType("CinematicModel") then
         local position = {
             x = x,
@@ -471,13 +475,15 @@ function NarciClassicAPI.SetCameraPosition(model, x, y, z)
     else
         model:SetCameraPosition(x, y, z);
     end
+	--]]
 end
 
 function NarciClassicAPI.SetCameraTarget(model, x, y, z)
     if type(x) == "table" then
         x, y, z = x:GetXYZ();
     end
-
+	model:SetCameraTarget(x, y, z);
+	--[[
     if model:IsObjectType("CinematicModel") then
         local position = {
             x = x,
@@ -488,6 +494,7 @@ function NarciClassicAPI.SetCameraTarget(model, x, y, z)
     else
         model:SetCameraTarget(x, y, z);
     end
+	--]]
 end
 
 
@@ -561,13 +568,13 @@ do
 			--slotID = 2 ~ Use neck to show right shoulder
 			return 0, 0;
 		end
-	
+
 		local isSecondaryAppearance;
 		if slotID == 2 then
 			isSecondaryAppearance = true;   --Enum.TransmogModification.Secondary
 			slotID = 3;
 		end
-	
+
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(slotID);
 		if not itemLocation or not C_Item.DoesItemExist(itemLocation) then
 			return 0, 0;
@@ -597,13 +604,13 @@ do
 			return appliedSourceID, appliedVisualID, hasSecondaryAppearance;
 		else
 			transmogLocation:Set(slotID, transmogType, modification);
-	
+
 			local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasPendingUndo, isHideVisual, itemSubclass = C_Transmog.GetSlotVisualInfo(transmogLocation);
 			if ( appliedSourceID == 0 ) then
 				appliedSourceID = baseSourceID;
 				appliedVisualID = baseVisualID;
 			end
-	
+
 			return appliedSourceID, appliedVisualID;
 		end
 	end

@@ -1,3 +1,6 @@
+local _, addon = ...
+local API = addon.API;
+
 local DataAPI;
 local GetItemName, GetSourceID, IsItemValidForTryOn;
 
@@ -14,7 +17,8 @@ local After = C_Timer.After;
 local FadeFrame = NarciFadeUI.Fade;
 local L = Narci.L;
 
-local GetItemInfoInstant = GetItemInfoInstant;
+local GetItemInfo = API.GetItemInfo;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 
 local TRY_ON_CHECK = false;
 --[[

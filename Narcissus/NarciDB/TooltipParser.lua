@@ -1,3 +1,6 @@
+local _, addon = ...
+local API = addon.API;
+
 local strtrim = strtrim;
 local UIParent = UIParent;
 
@@ -15,9 +18,9 @@ local max = math.max;
 local _G = _G;
 local TEXT_LOCALE = GetLocale();
 
-local GetItemInfoInstant = GetItemInfoInstant;
-local GetItemGem = GetItemGem;
-local GetItemStats = GetItemStats;
+local GetItemInfoInstant = API.GetItemInfoInstant;
+local GetItemGem = API.GetItemGem;
+local GetItemStats = API.GetItemStats;
 local DoesItemExist = C_Item.DoesItemExist;
 
 
@@ -1360,69 +1363,3 @@ local function GetItemStatsFromTooltip(itemLocation)
 end
 
 NarciAPI.GetItemStatsByTooltipItemLocation = GetItemStatsFromTooltip;
-
---[[
-itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount,
-itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expacID, (setID), isCraftingReagent
-= GetItemInfo
-
-GetItemSetInfo(setID)
-GetItemSpecInfo
-
-ITEM_SET_BONUS = "Set: %s";
-ITEM_SET_BONUS_GRAY = "(%d) Set: %s";
-ITEM_SET_BONUS_NO_VALID_SPEC = "Bonus effects vary based on the player's specialization.";
-ITEM_SET_LEGACY_INACTIVE_BONUS = "Legacy Set: Bonus is inactive";
-ITEM_SET_NAME = "%s (%d/%d)";
---]]
-
---[[
-local function TestItemLinkAffix(from, to)
-    local TP = TP;
-    local max = max;
-    local total = 0;
-    local s = from  --6500;
-    local e = to    --6600;
-    local output;
-    local itemLink;
-    local function GetExtraInfo()
-        itemLink = "\124cffa335ee\124Hitem:174954::::::::120::::2:1477:".. s ..":\124h[]\124h\124r";
-        TP:SetHyperlink(itemLink);
-        local num = TP:NumLines();
-        local begin = max(num - 3, 0);
-        local str;
-    
-        for i = begin, num, 1 do
-            str = nil;
-            str = _G["NarciVirtualTooltip".."TextLeft"..i]
-            if not str then
-                break;
-            else
-                str = str:GetText();
-            end
-            
-            if find(str, ON_EQUIP) then
-                print("|cFFFFD100"..s.."|r "..str);
-                break
-            end
-        end
-
-        s = s + 1;
-        total = total + 1;
-        if s < e and total < 1000 then
-            After(0, GetExtraInfo);
-        else
-            print("Search Complete")
-        end
-    end
-
-    print("Search from "..s.." to "..e);
-    for i = s, e do
-        --Cache
-        itemLink = "\124cffa335ee\124Hitem:174954::::::::120::::2:1477:".. i ..":\124h[]\124h\124r";
-        TP:SetHyperlink(itemLink);
-    end
-    After(1, GetExtraInfo);
-end
-
---]]

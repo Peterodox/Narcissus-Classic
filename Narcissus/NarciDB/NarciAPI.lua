@@ -1,14 +1,14 @@
 local _, addon = ...
+local API = addon.API;
 local C_Item = C_Item;
 local After = C_Timer.After;
-local GetItemInfo = GetItemInfo;
-local GetItemInfoInstant = GetItemInfoInstant;
+local GetItemInfo = API.GetItemInfo;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 local UIFrameFadeIn = UIFrameFadeIn;
 local UIFrameFadeOut = UIFrameFadeOut;
 local FadeFrame = NarciFadeUI.Fade;
 local PlaySound = PlaySound;
 local unpack = unpack;
-local _, _, _, tocversion = GetBuildInfo();
 
 local match = string.match;
 local strsub = string.sub;
@@ -30,7 +30,6 @@ SecureContainer:Hide();
 ------------------------
 --Redirect API for 9.0--
 ------------------------
-tocversion = tonumber(tocversion);
 
 ExpansionTransitionBackdropTemplateMixin = {};
 
@@ -516,8 +515,8 @@ local EnchantInfo = Narci.EnchantData;
 local DoesItemExist = C_Item.DoesItemExist;
 local GetCurrentItemLevel = C_Item.GetCurrentItemLevel;
 local GetItemLink = C_Item.GetItemLink
-local GetItemStats = GetItemStats;
-local GetItemGem = GetItemGem;
+local GetItemStats = API.GetItemStats;
+local GetItemGem = API.GetItemGem;
 
 function NarciAPI_GetItemStats(itemLocation)
     local statsTable = {};

@@ -1,4 +1,5 @@
 local _, addon = ...
+local API = addon.API;
 local DataProvider = {};
 addon.TransmogDataProvider = DataProvider;
 
@@ -12,7 +13,7 @@ local GetSourceInfo = MogAPI.GetSourceInfo;
 local GetAppearanceSourceDrops = MogAPI.GetAppearanceSourceDrops or function() end; --Not in Cata
 
 local CreateItemTransmogInfo = ItemUtil.CreateItemTransmogInfo;
-local GetItemInfoInstant = GetItemInfoInstant;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 local strsplit = strsplit;
 
 local LocalizedData = addon.LocalizedData;

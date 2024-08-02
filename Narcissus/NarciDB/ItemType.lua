@@ -1,7 +1,8 @@
-local _;
+local _, addon = ...
+local API = addon.API;
 local floor = math.floor;
 local format = string.format;
-local GetItemInfoInstant = GetItemInfoInstant;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 local FORMAT_REQUIRES = ITEM_REQ_SPECIALIZATION;
 
 local slotData = {

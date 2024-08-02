@@ -1,4 +1,5 @@
 local _, addon = ...
+local API = addon.API;
 
 local EnchantDataProvider = addon.EnchantDataProvider;
 local GemDataProvider = addon.GemDataProvider;
@@ -25,7 +26,8 @@ else
 end
 
 local GetSpellDescription = GetSpellDescription;
-local GetItemSpell = GetItemSpell;
+local GetItemSpell = API.GetItemSpell;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 
 local tinsert = table.insert;
 local tremove = table.remove;
@@ -508,7 +510,7 @@ function NarciEquipmentOptionMixin:SetFromSlotButton(slotButton, returnHome)
     equipmentTable = nil;
     if numEquipment > 0 then
         button1:Enable();
-        button1:SetButtonText(button1.buttonName, string.format(SINGLE_PAGE_RESULTS_TEMPLATE, numEquipment));
+        button1:SetButtonText(button1.buttonName, string.format((SINGLE_PAGE_RESULTS_TEMPLATE or "%d Items"), numEquipment));
     else
         button1:Disable();
         local slotName = NarciAPI.GetSlotNameAndTexture(slotID);

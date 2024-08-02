@@ -1,7 +1,7 @@
-local NARCI_VERSION_INFO = "1.2.1";
+local NARCI_VERSION_INFO = "1.2.2";
 
-local VERSION_DATE = 1715070000;
-local CURRENT_VERSION = 10201;
+local VERSION_DATE = 1722610000;
+local CURRENT_VERSION = 10202;
 local PREVIOUS_VERSION = CURRENT_VERSION;
 local TIME_SINCE_LAST_UPDATE = 0;
 
@@ -16,6 +16,7 @@ end
 local _, addon = ...
 local SettingFunctions = {};
 addon.SettingFunctions = SettingFunctions;
+addon.API = {};
 
 --[[
 Saved Variables:

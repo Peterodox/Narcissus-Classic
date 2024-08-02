@@ -1,4 +1,7 @@
-local GetItemAppearnceID = GetItemInfo--C_TransmogCollection.GetItemInfo;
+local _, addon = ...
+local API = addon.API;
+
+local GetItemAppearnceID = API.GetItemInfo--C_TransmogCollection.GetItemInfo;
 
 NarciWeaponComparisonMixin = CreateFromMixins(NarciWeaponNicheMixin)
 

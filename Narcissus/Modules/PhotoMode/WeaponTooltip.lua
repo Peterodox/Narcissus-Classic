@@ -1,11 +1,14 @@
+local _, addon = ...
+local API = addon.API;
+
 local MAX_WIDTH = 180;
 local MIN_WIDTH = 0;
 local EXTRA_HEIGHT = 0;
 
 local UIParent = UIParent;
 local GetCursorPosition = GetCursorPosition;
-local GetItemInfo = GetItemInfo;
-local GetItemInfoInstant = GetItemInfoInstant;
+local GetItemInfo = API.GetItemInfo;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 local GetTransmogItemAppearanceID = GetItemInfo;    --C_TransmogCollection.GetItemInfo;
 local GetItemAppearanceID;
 local FadeFrame = NarciFadeUI.Fade;

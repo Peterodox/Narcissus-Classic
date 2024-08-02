@@ -4,6 +4,7 @@ This work is licensed under the Creative Commons Attribution-NonCommercial-Share
 
 --Settings storaged in NarcissusDB
 local _, addon = ...
+local API = addon.API;
 local MsgAlertContainer = addon.MsgAlertContainer;
 
 local Narci = Narci;
@@ -16,7 +17,7 @@ local VIGNETTE_ALPHA = 0.5;
 local IS_OPENED = false;									--Addon was opened by clicking
 local MOG_MODE = false;
 local XMOG_MODE = 0;										-- 0 off	1 "Texts Only" 	2 "Texts & Model"
-local CAN_MOG = C_TransmogCollection and C_TransmogCollection.GetSourceInfo ~= nil;
+local CAN_MOG = addon.expansionID >= 4;
 
 local NarciAPI = NarciAPI;
 local GetItemEnchantID = NarciAPI.GetItemEnchantID;
@@ -33,12 +34,12 @@ local GetItemQualityColor = NarciAPI.GetItemQualityColor;
 local QueueFrame = NarciAPI.CreateProcessor(nil, 0.5);
 local AttributeController = Narci.AttributeController;
 local GetInventoryItemsForSlot = GetInventoryItemsForSlot;
-local GetItemInfo = GetItemInfo;
+local GetItemInfo = API.GetItemInfo;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 local InCombatLockdown = InCombatLockdown;
 local PlayLetteboxAnimation = NarciAPI_LetterboxAnimation;
 local GetToolbarButtonByButtonType = addon.GetToolbarButtonByButtonType;
 local TransmogDataProvider = addon.TransmogDataProvider;
-local GetItemInfoInstant = GetItemInfoInstant;
 local ConfirmBinding = addon.ConfirmBinding;
 
 local Narci_AlertFrame_Autohide = Narci_AlertFrame_Autohide;

@@ -1,15 +1,18 @@
+local _, addon = ...
+local API = addon.API;
 local L = Narci.L;
 local GetItemQualityColor = NarciAPI.GetItemQualityColor;
 local GetGemBonus = NarciAPI.GetGemBonus; --(Gem's itemID or hyperlink)
 local GetShardBonus = NarciAPI.GetDominationShardBonus;
 local max = math.max;
 local FadeFrame = NarciFadeUI.Fade;
+local tinsert = table.insert;
 
 local GemIDList = {};
 local DominationShardIDs = {};
-local GetItemIcon = GetItemIcon;
-local GetItemCount = GetItemCount;
-local GetItemInfo = GetItemInfo;
+local GetItemIcon = API.GetItemIconByID;
+local GetItemCount = API.GetItemCount;
+local GetItemInfo = API.GetItemInfo;
 local NUM_EXAMPLE_GEMS = 3;
 
 for gemID, info in pairs(Narci.GemData) do

@@ -1,4 +1,7 @@
-local GetItemInfoInstant = GetItemInfoInstant;
+local _, addon = ...
+local API = addon.API;
+
+local GetItemInfoInstant = API.GetItemInfoInstant;
 local NarciAPI = NarciAPI;
 
 local PADDING = 24;

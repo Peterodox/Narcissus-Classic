@@ -29,7 +29,7 @@ do
 end
 
 local MAX_SETS = MAX_EQUIPMENT_SETS_PER_PLAYER or 10;
-local GAME_HAS_EQUIPMENT_MANAGER = _G["GearManagerDialog"] and true;
+local GAME_HAS_EQUIPMENT_MANAGER = PaperDollFrame.EquipmentManagerPane and true or false;
 
 local C_EquipmentSet = C_EquipmentSet or {};
 local GetEquipmentSetInfo = C_EquipmentSet.GetEquipmentSetInfo
@@ -895,12 +895,21 @@ function NarciEquipmentSetManagerMixin:SetParentMode(frameName)
         self:SetHeight(384);
 
     elseif frameName == "blizzard" and NARCISSUS_MODE ~= false then
+        --TO-DO: Switch to game font
         NARCISSUS_MODE = false;
 
-        local parent = PaperDollFrame;
-        self:SetParent(parent);
+        local offsetX;
+        local relativeTo;
+        if GAME_HAS_EQUIPMENT_MANAGER then
+            relativeTo = PaperDollItemsFrame or PaperDollFrame;
+            offsetX = 0;
+        else
+            offsetX = -30;
+            relativeTo = PaperDollFrame;
+        end
+        self:SetParent(PaperDollFrame);
         self:ClearAllPoints();
-        self:SetPoint("TOPLEFT", parent, "TOPRIGHT", -30, -52);
+        self:SetPoint("TOPLEFT", relativeTo, "TOPRIGHT", offsetX, -52);
         self:Show();
     end
 
@@ -1138,7 +1147,9 @@ function NarciEquipmentManagerToggleMixin:UpdatePosition()
 end
 
 local function SetUsePaperDollEquipmentManager(state)
-    if (state or state == nil) and (not C_CVar.GetCVarBool("equipmentManager")) then
+    --C_CVar.GetCVarBool("equipmentManager") can returns true in Era despite not supporting EquipmentSet officially
+
+    if (state or state == nil) and ((not GAME_HAS_EQUIPMENT_MANAGER) or (not C_CVar.GetCVarBool("equipmentManager"))) then
         EquipmentMangerToggle:Show();
     else
         EquipmentMangerToggle:Hide();

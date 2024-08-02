@@ -1,4 +1,5 @@
-local _, addon = ...;
+local _, addon = ...
+local API = addon.API;
 
 local MainFrame, ScrollFrame, Tooltip, ButtonHighlight, EnchantActionButton, GemActionButton;
 
@@ -14,9 +15,11 @@ local GetCachedItemTooltipTextByLine = NarciAPI.GetCachedItemTooltipTextByLine;
 
 local GetSpellInfo = GetSpellInfo;
 local GetSpellDescription = GetSpellDescription;
-local GetItemCount = GetItemCount;
-local GetItemIcon = GetItemIcon;
-local GetItemInfo = GetItemInfo;
+local GetItemCount = API.GetItemCount;
+local GetItemIcon = API.GetItemIconByID;
+local GetItemInfo = API.GetItemInfo;
+local GetContainerItemLink = API.GetContainerItemLink;
+local GetInventoryItemLink = GetInventoryItemLink;
 local IsMouseButtonDown = IsMouseButtonDown;
 
 local InUseIDs = {
@@ -45,7 +48,7 @@ local function GetAppliedEnhancement(id1, id2)
     if itemLink then
         _, _, _, linkType, id, enchantID, gemID = strsplit(":|H", itemLink);
     end
-    
+
     gemID = tonumber(gemID);
     enchantID = tonumber(enchantID);
     if gemID == 0 then
@@ -70,7 +73,7 @@ local function GetNewGemID(state)
     if state then
         local gemLink = GetNewSocketLink(1);
         if gemLink then
-            local gemID = GetItemInfoInstant(gemLink);
+            local gemID = API.GetItemInfoInstant(gemLink);
             if gemID == 0 then
                 gemID = nil;
             end

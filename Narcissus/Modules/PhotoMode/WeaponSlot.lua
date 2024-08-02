@@ -1,9 +1,8 @@
-local TransmogDataProvider;
-do
-    local _, addon = ...
-    TransmogDataProvider = addon.TransmogDataProvider;
-end
-
+local _, addon = ...
+local TransmogDataProvider = addon.TransmogDataProvider;
+local API = addon.API;
+local GetItemInfo = API.GetItemInfo;
+local GetItemInfoInstant = API.GetItemInfoInstant;
 local Narci = Narci;
 
 local function GetItemIcon(itemID)

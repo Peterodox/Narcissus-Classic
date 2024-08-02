@@ -1,6 +1,5 @@
-## Interface: 11502
-## Plain Title: Narcissus
-## Version: 1.2.1
+## Interface: 11503
+## Version: 1.2.2
 
 ## Title: Narcissus
 
