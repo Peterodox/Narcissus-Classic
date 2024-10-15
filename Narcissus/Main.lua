@@ -72,8 +72,8 @@ local EL = CreateFrame("Frame");	--Event Listener
 EL:Hide();
 
 EL.dynamicEvents = {"PLAYER_TARGET_CHANGED", "COMBAT_RATING_UPDATE", "PLAYER_MOUNT_DISPLAY_CHANGED",
-"PLAYER_STARTED_MOVING", "PLAYER_REGEN_DISABLED", "UNIT_MAXPOWER", "PLAYER_STARTED_TURNING", "PLAYER_STOPPED_TURNING",
-"BAG_UPDATE_COOLDOWN", "UNIT_STATS", "BAG_UPDATE", "PLAYER_EQUIPMENT_CHANGED",
+					"PLAYER_STARTED_MOVING", "PLAYER_REGEN_DISABLED", "UNIT_MAXPOWER", "PLAYER_STARTED_TURNING", "PLAYER_STOPPED_TURNING",
+					"BAG_UPDATE_COOLDOWN", "UNIT_STATS", "BAG_UPDATE", "PLAYER_EQUIPMENT_CHANGED",
 };
 
 EL.unitEvents = {"UNIT_DAMAGE", "UNIT_ATTACK_SPEED", "UNIT_MAXHEALTH", "UNIT_AURA", "UNIT_INVENTORY_CHANGED"};
@@ -171,10 +171,12 @@ function Narci_ShowButtonTooltip(self)
 end
 
 function Narci:HideButtonTooltip()
-	--ShowDelayedTooltip(false);
-	DefaultTooltip:HideTooltip();
-	ItemTooltip:HideTooltip();
-	--DefaultTooltip:SetFrameStrata("TOOLTIP");
+	if DefaultTooltip then
+		DefaultTooltip:Hide()
+	end
+	if ItemTooltip then
+		ItemTooltip:Hide()
+	end
 end
 
 
@@ -299,35 +301,35 @@ local ZoomValuebyRaceID = {
 		   [3] = {2.1, 0.3144, -0.054, 4}},
 
 	[10] = {[2] = {2.1, 0.361, -0.1654, 4},		--10 BloodElf Male √
-		    [3] = {2.1, 0.3177, 0.0683, 3.8}},
+			[3] = {2.1, 0.3177, 0.0683, 3.8}},
 
 	[11] = {[2] = {2.4, 0.248, -0.02, 5.5},		--11 Goat Male √
 			[3] = {2.1, 0.3177, 0, 5}},
-			
+
 	[24] = {[2] = {2.5, 0.2233, -0.04, 5.2},		--24 Pandaren Male √
-		    [3] = {2.5, 0.2433, 0.04, 5.2}},
+			[3] = {2.5, 0.2433, 0.04, 5.2}},
 
 	[27] = {[2] = {2.1, 0.3067, -0.02, 5.2},		--27 Nightborne √
-		   [3] = {2.1, 0.3347, -0.0563, 4.7}},
+			[3] = {2.1, 0.3347, -0.0563, 4.7}},
 
 	[28] = {[2] = {3.5, 0.2027, -0.18, 5.5},		--28 Tauren Male √
-		   [3] = {2.3, 0.2293, 0.0067, 5.5}},
+			[3] = {2.3, 0.2293, 0.0067, 5.5}},
 
 	[29] = {[2] = {2.1, 0.3556, -0.1038, 4.5},		--24 VE √
 			[3] = {2.1, 0.3353, -0.02, 3.8}},
 
 	[31] = {[2] = {2.3, 0.2387, -0.04, 5.5},		--32 Zandalari √
-		   [3] = {2.1, 0.2733, -0.1243, 5.5}},
+			[3] = {2.1, 0.2733, -0.1243, 5.5}},
 
 	[32] = {[2] = {2.3, 0.2387, 0.04, 5.2},			--32 Kul'Tiran √
-		   [3] = {2.1, 0.312, -0.02, 4.7}},
+			[3] = {2.1, 0.312, -0.02, 4.7}},
 
 	[35] = {[2] = {2.1, 0.31, -0.03, 3.1},			--35 Vulpera √
-		   [3] = {2.1, 0.31, -0.03, 3.1}},	
+			[3] = {2.1, 0.31, -0.03, 3.1}},
 
 	["Wolf"] = {[2] = {2.6, 0.2266, -0.02, 5},	--22 Worgen Wolf form √
-		   	[3] = {2.1, 0.2613, -0.0133, 4.7}},
-	
+				[3] = {2.1, 0.2613, -0.0133, 4.7}},
+
 	["Druid"] = {[1] = {3.71, 0.2027, -0.02, 5},		--Cat
 				 [5] = {4.8, 0.1707, -0.04, 5},			--Bear
 				 [31] = {4.61, 0.1947, -0.02, 5},		--Moonkin
@@ -337,11 +339,11 @@ local ZoomValuebyRaceID = {
 				 [3] = {4.91, 0.184, -0.02, 5},			--Travel Form
 				 [36] = {4.2, 0.1707, -0.04, 5},		--Treant
 				 [2] = {5.4, 0.1707, -0.04, 5},			--Tree of Life
-				},
+	},
 
 	["Mounted"] = {[2] = {8, 1.2495, -4, 5.5},
 				   [3] = {8, 1.2495, -4, 5.5}},
-	
+
 	--1 	Human 32 Kultiran
 	--2 	Orc
 	--3 	Dwarf
@@ -695,7 +697,7 @@ CameraMover.smoothYaw:SetScript("OnUpdate", function(frame, elapsed)
 	local factor = ZoomFactor;
 	local speed = inOutSine(frame.total, factor.fromSpeed, factor.toSpeed, 1.5);	--inOutSine
 	frame.MoveView(speed);
-	
+
 	if frame.total >= 1.5 then
 		if not IsPlayerMoving() then
 			frame.MoveView(factor.toSpeed);
@@ -731,13 +733,13 @@ function CameraMover:InstantZoomIn()
 	After(0, function()
 		ConsoleExec( "pitchlimit 88");
 	end)
-	
+
 	local zoom = ZOOM_IN_VALUE or GetCameraZoom();
 	local shoulderOffset = zoom * SHOULDER_FACTOR_1 + SHOULDER_FACTOR_2 + MogModeOffset;
 	SetCVar("test_cameraOverShoulder", shoulderOffset);		--CameraZoomIn(0.0)	--Smooth
-	
+
 	self:ZoomIn(ZOOM_IN_VALUE);
-	
+
 	self:ShowFrame();
 	SetUIVisibility(false);
 	if not IsPlayerMoving() and NarcissusDB.CameraOrbit then
@@ -773,7 +775,7 @@ function CameraMover:Enter()
 		if not IsFlying("player") then
 			self.smoothPitch:Show();
 		end
-		
+
 		After(0.1, function()
 			self:ZoomIn(ZOOM_IN_VALUE);
 			After(0.7, function()
@@ -996,7 +998,7 @@ end
 local GetInventoryItemCooldown = GetInventoryItemCooldown;
 
 local function SetItemSocketingFramePosition(self)		--Let ItemSocketingFrame appear on the side of the slot
-	if ItemSocketingFrame then																		
+	if ItemSocketingFrame then
 		if self.GemSlot:IsShown() then
 			ItemSocketingFrame:Show()
 		else
@@ -1457,7 +1459,7 @@ function NarciEquipmentSlotMixin:Refresh(forceRefresh)
 			end
 			--]]
 			itemLink = C_Item.GetItemLink(itemLocation);
-			
+
 			if validForTempEnchant[slotID] then
 				local hasTempEnchant = NarciTempEnchantIndicatorController:InitFromSlotButton(self);
 				if hasTempEnchant ~= self.hasTempEnchant then
@@ -1472,7 +1474,7 @@ function NarciEquipmentSlotMixin:Refresh(forceRefresh)
 					return
 				end
 			end
-			
+
 			local itemVFX;
 			local itemID = GetItemInfoInstant(itemLink);
 			borderTexKey, itemVFX, bR, bG, bB = GetBorderArtByItemID(itemID);
@@ -1990,29 +1992,29 @@ function PlayTimeUtil:SetBasePlayTime(basePlayTime)
 end
 
 function PlayTimeUtil:Format(time)
-    local hours = math.floor(time / 3600);
+	local hours = math.floor(time / 3600);
 	local minutes = math.floor((time - hours * 3600) / 60);
 	--local seconds = math.fmod(time, 60);
 
-    local text;
+	local text;
 
-    if hours > 0 then
-        text = string.format(HOURS_ABBR, hours);
+	if hours > 0 then
+		text = string.format(HOURS_ABBR, hours);
 		if hours >= 24 then
 			return text
 		end
-    end
+	end
 
-    if minutes > 0 then
-        local mText = string.format(MINUTES_ABBR, minutes);
-        if text then
-            text = text .. " "..mText;
-        else
-            text = mText;
-        end
-    end
+	if minutes > 0 then
+		local mText = string.format(MINUTES_ABBR, minutes);
+		if text then
+			text = text .. " "..mText;
+		else
+			text = mText;
+		end
+	end
 
-    return text
+	return text
 end
 
 function PlayTimeUtil:GetTimeString()
@@ -2377,8 +2379,8 @@ function NarciEquipmentFlyoutFrameMixin:SetItemSlot(slotButton, showArrow)
 	Tooltip:ClearAllPoints();
 	Tooltip:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 8, 12);
 	if slotButton:GetTop() > Tooltip:GetBottom() then
-    	Tooltip:ClearAllPoints();
-    	Tooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 8, -12);
+		Tooltip:ClearAllPoints();
+		Tooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 8, -12);
 	end
 	Narci_Comparison_SetComparison(self.BaseItem, slotButton);
 	Tooltip:Show();
@@ -2416,7 +2418,7 @@ function NarciEquipmentFlyoutFrameMixin:DisplayItemsBySlotID(slotID, playFlyUpAn
 	end
 	self.BaseItem = bastItemLocation;
 	local buttons = self.buttons;
-	
+
 	--Get the items from bags;
 	local itemTable = {};
 	local sortedItems = {};
@@ -2717,7 +2719,7 @@ function Narci_Open()
 				--AttributeController:PlayFadeIn();
 			end);
 		end);
-		
+
 		Narci.refreshCombatRatings = true;
 		Narci.isActive = true;
 	else
@@ -2768,12 +2770,12 @@ function Narci_OpenGroupPhoto()
 		CameraUtil:UpdateParameters();
 		CameraMover:MakeActive();
 		SetCVar("test_cameraDynamicPitch", 1);
-		
+
 		local speedFactor = 180/(GetCVar("cameraYawMoveSpeed") or 180);
 		ZoomFactor.toSpeed = speedFactor*ZoomFactor.toSpeedBasic;
 		ZoomFactor.fromSpeed = speedFactor*ZoomFactor.fromSpeedBasic;
 		EL:Show();
-		
+
 		CameraMover:Pitch();
 
 		After(0, function()
@@ -2805,7 +2807,7 @@ function Narci_OpenGroupPhoto()
 				end)
 			end)
 		end)
-		
+
 		Narci.isActive = true;
 		MsgAlertContainer:Display();
 	end
@@ -2926,7 +2928,7 @@ local function CopyTexts(textFormat, includeID)
 				if includeID and SLOT_TABLE[index].itemID then
 					text = text.." |cFFacacac"..SLOT_TABLE[index].itemID.."|r";
 				end
-				
+
 				source = SLOT_TABLE[index].ItemLevel:GetText();
 				if source and source ~= " " then
 					text = text.." ("..source..")"
@@ -2937,7 +2939,7 @@ local function CopyTexts(textFormat, includeID)
 			end
 		end
 
-	elseif textFormat == "reddit" then	
+	elseif textFormat == "reddit" then
 		texts = "|cFF959595**|r"..texts.."|cFF959595**\n\n| Slot | Name | Source |".."\n".."|:--|:--|:--|"
 		for i=1, #xmogTable do
 			local index =  xmogTable[i][1]
@@ -2950,7 +2952,7 @@ local function CopyTexts(textFormat, includeID)
 				end
 				source = SLOT_TABLE[index].ItemLevel:GetText()
 				if source then
-				text = text.." |cFF959595| |r|cFF40C7EB"..source.."|r |cFF959595| |r"
+					text = text.." |cFF959595| |r|cFF40C7EB"..source.."|r |cFF959595| |r"
 				else
 					text = text.." |cFF959595| |r"
 				end
@@ -3233,86 +3235,86 @@ end
 
 
 local raceList = {	--For 3D Portait on the top-left
-  --[RaceID] = {[GenderID] = {offsetX, offsetY, distance, angle, CameraIndex, {animation} }}
+	--[RaceID] = {[GenderID] = {offsetX, offsetY, distance, angle, CameraIndex, {animation} }}
 	[1]  = {[2] = {10, -10, 0.75, false, 0},	--Human Male √
-		    [3] = {12, -10, 0.71, false, 1, 2},	-- 	    Female	 √
-		},
+			[3] = {12, -10, 0.71, false, 1, 2},	-- 	    Female	 √
+	},
 
 	[2]  = {[2] = {12, -16, 1.3, 1.1, 0},	--Orcs Male  √
-		    [3] = {18, -16, 0.72, 1.1, 0, 1},	-- 	    Female	 √
-		},
+			[3] = {18, -16, 0.72, 1.1, 0, 1},	-- 	    Female	 √
+	},
 
 	[3]  = {[2] = {14, -20, 0.88, 0.9, 1},	--Dwarf Male
-		    [3] = {2, -12, 0.75, false, 0},	-- 	    Female	 √
-		},	
+			[3] = {2, -12, 0.75, false, 0},	-- 	    Female	 √
+	},
 
 	[4]  = {[2] = {16, -5, 1, 1.5, 0},		--NE	Male
-		    [3] = {8, -10, 0.75, false, 0},	-- 	    Female
-		},	
+			[3] = {8, -10, 0.75, false, 0},	-- 	    Female
+	},
 
 	[5]  = {[2] = {16, -6, 0.6, 0.8, 1},	--UD 	Male
-		    [3] = {10, -6, 0.68, 1.0, 1, 3},	-- 	    Female
-		},
+			[3] = {10, -6, 0.68, 1.0, 1, 3},	-- 	    Female
+	},
 
 	[6]  = {[2] = {24, -15, 3, 0.6, 1},		--Tauren Male	√
-		    [3] = {24, -8, 1.8, false, 0},	-- 	     Female
-		},	
+			[3] = {24, -8, 1.8, false, 0},	-- 	     Female
+	},
 
 	[7]  = {[2] = {10, -14, 1, 0.5, 1},			--Gnome Male
-		    [3] = {14, -14, 0.8, 0.55, 0},	-- 	    Female
-		},
+			[3] = {14, -14, 0.8, 0.55, 0},	-- 	    Female
+	},
 
 	[8]  = {[2] = {16, -4, 1.15, 1.3, 0},	--Troll Male √
-		    [3] = {18, -10, 0.75, 1.3, 0},	-- 	    Female	 √
-		},
+			[3] = {18, -10, 0.75, 1.3, 0},	-- 	    Female	 √
+	},
 
 	[9] = {[2] = {8, 0, 0.8, 0.6, 0},		--Goblin Male 	 √
-			[3] = {20, -14, 0.85, 0.8, 0},	-- 	    Female 	 √
-		},	
+		   [3] = {20, -14, 0.85, 0.8, 0},	-- 	    Female 	 √
+	},
 
 	[10] = {[2] = {8, -5, 0.75, 1.2, 0},		--	BE Male
 			[3] = {0, -4, 0.53, 1.1, 0},	-- 	    Female
-		},	
+	},
 
 	[11] = {[2] = {15, -12, 1, 1.4, 0},		--	Goat Male
 			[3] = {10, -10, 0.66, 1.4, 0},	-- 	    Female
-		},	
+	},
 
 	[22]  = {[2] = {10, -10, 0.75, false, 0},	--Worgen Male Human Form
-		    [3] = {12, -12, 0.72, 1.1, 1},		--Female	 √
-		},
+			 [3] = {12, -12, 0.72, 1.1, 1},		--Female	 √
+	},
 
 	[24]  = {[2] = {14, 0, 1.1, 1.15, 0},		--Pandaren Male		√
-		    [3] = {12, 4, 1.0, 1.1, 0},			--Female	 
-		},
+			 [3] = {12, 4, 1.0, 1.1, 0},			--Female	 
+	},
 
 	[27]  = {[2] = {24, -10, 0.72, false, 0},	--Highborne Male		√
-		    [3] = {16, -4, 0.70, false, 0},			--Female	 
-		},
+			 [3] = {16, -4, 0.70, false, 0},			--Female	 
+	},
 
 	[28]  = {[2] = {24, -15, 2.4, 0.6, 0},		--Tauren Male	√
-		    [3] = {4, -10, 0.62, false, 0},	-- 	     Female
-		},	
+			 [3] = {4, -10, 0.62, false, 0},	-- 	     Female
+	},
 
 	[128]  = {[2] = {18, -18, 1.4, 0.85, 0},	--Worgen Male Wolf Form
-		    [3] = {18, -15, 1.1, 1.25, 0},		--Female	 √
-		},
+			  [3] = {18, -15, 1.1, 1.25, 0},		--Female	 √
+	},
 
 	[31]  = {[2] = {4, 0, 1.2, 1.6, 0},		--Zandalari Male √
-		    [3] = {18, -12, 0.95, 1.6, 0},		-- 	    Female	 √
-		},
+			 [3] = {18, -12, 0.95, 1.6, 0},		-- 	    Female	 √
+	},
 
 	[32]  = {[2] = {10, -16, 1.25, 1.15, 1},	--Kul'tiran Male	√
-		    [3] = {12, -10, 0.9, 1.5, 0},			--Female	 
-		},
+			 [3] = {12, -10, 0.9, 1.5, 0},			--Female	 
+	},
 
 	[36]  = {[2] = {14, -10, 1.2, 1.2, 0, 2},		--Mag'har Male
-		    [3] = {20, -20, 0.75, false, 0, 1},		-- 	    Female	 √
-		},
+			 [3] = {20, -20, 0.75, false, 0, 1},		-- 	    Female	 √
+	},
 
 	[35]  = {[2] = {18, -8, 0.7, false, 1, 2},		--Vulpera Male
-		    [3] = {18, -8, 0.7, false, 1, 2},	-- 	    Female 	 √
-		},
+			 [3] = {18, -8, 0.7, false, 1, 2},	-- 	    Female 	 √
+	},
 }
 
 function Narci_PortraitPieces_OnLoad(self)
@@ -3438,7 +3440,7 @@ EL:SetScript("OnEvent",function(self, event, ...)
 
 		if IsAddOnLoaded("DynamicCam") then
 			CVarTemp.isDynamicCamLoaded = true;
-			
+
 			--Check validity
 			if not (DynamicCam.BlockShoulderOffsetZoom and DynamicCam.AllowShoulderOffsetZoom) then return end;
 			hooksecurefunc("Narci_Open", function()
@@ -3457,7 +3459,7 @@ EL:SetScript("OnEvent",function(self, event, ...)
 
 		After(1.7, function()
 			UpdateCharacterInfoFrame();
-			
+
 			if CVarTemp.isDynamicCamLoaded then
 				CameraMover:UpdateMovementMethodForDynamicCam();
 			else
@@ -3466,7 +3468,7 @@ EL:SetScript("OnEvent",function(self, event, ...)
 						UpdateShoulderCVar:Start(-increment);
 					end
 				end)
-				
+
 				hooksecurefunc("CameraZoomOut", function(increment)
 					if IS_OPENED then
 						UpdateShoulderCVar:Start(increment);
@@ -3487,14 +3489,14 @@ EL:SetScript("OnEvent",function(self, event, ...)
 		ItemLevelFrame:AsyncUpdate();
 
 	elseif event == "PLAYER_AVG_ITEM_LEVEL_UPDATE" then
-        if not self.isRefreshing then
-            self.isRefreshing = true;
-            After(0, function()    -- only want 1 update per 0.1s
+		if not self.isRefreshing then
+			self.isRefreshing = true;
+			After(0, function()    -- only want 1 update per 0.1s
 				ItemLevelFrame:AsyncUpdate();
 				After(0.1, function()
 					self.isRefreshing = nil;
 				end)
-            end)
+			end)
 		end
 	elseif event == "UNIT_NAME_UPDATE" then
 		local unit = ...;
@@ -3517,10 +3519,10 @@ EL:SetScript("OnEvent",function(self, event, ...)
 		UpdateCharacterInfoFrame(newLevel)
 
 	elseif ( event == "COMBAT_RATING_UPDATE" or
-			 event == "UNIT_MAXPOWER" or
-			 event == "UNIT_STATS" or
-			 event == "UNIT_DAMAGE" or event == "UNIT_ATTACK_SPEED" or event == "UNIT_MAXHEALTH" or event == "UNIT_AURA"
-			) and Narci.refreshCombatRatings then
+			event == "UNIT_MAXPOWER" or
+			event == "UNIT_STATS" or
+			event == "UNIT_DAMAGE" or event == "UNIT_ATTACK_SPEED" or event == "UNIT_MAXHEALTH" or event == "UNIT_AURA"
+	) and Narci.refreshCombatRatings then
 		-- don't refresh stats when equipment set manager is activated
 		AttributeController:InstantRefresh();
 
@@ -3559,7 +3561,7 @@ EL:SetScript("OnEvent",function(self, event, ...)
 
 	elseif event == "BAG_UPDATE_COOLDOWN" then
 		SlotController:UpdateCooldown();
-		
+
 	elseif event == "BAG_UPDATE" then
 		local newTime = GetTime();
 		if self.lastTime then
@@ -3764,9 +3766,9 @@ function Narci:CloseCharacterUI()
 end
 
 do
-    local SettingFunctions = addon.SettingFunctions;
+	local SettingFunctions = addon.SettingFunctions;
 
-    function SettingFunctions.SetItemTooltipStyle(id, db)
+	function SettingFunctions.SetItemTooltipStyle(id, db)
 		--[[
         if id == nil then
             id = db["ItemTooltipStyle"];
@@ -3780,7 +3782,7 @@ do
 
 		ItemTooltip = NarciGameTooltip;
 		NarciEquipmentTooltip:SetParent(Narci_Character);
-    end
+	end
 
 
 	function SettingFunctions.SetVignetteStrength(alpha, db)
@@ -3859,7 +3861,7 @@ do
 		else
 			maxLines = 2;
 		end
-		
+
 		for id, slotButton in pairs(SLOT_TABLE) do
 			slotButton.Name:SetMaxLines(maxLines);
 			slotButton.ItemLevel:SetMaxLines(maxLines);

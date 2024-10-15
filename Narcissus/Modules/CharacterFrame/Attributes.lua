@@ -75,6 +75,7 @@ local CR_HASTE_SPELL = CR_HASTE_SPELL or 20;
 local CR_EXPERTISE = CR_EXPERTISE or 24;
 local CR_ARMOR_PENETRATION = CR_ARMOR_PENETRATION or 25;
 
+local _Ranged = {}
 
 local function PaperDollFrame_GetArmorReduction(armor, attackerLevel)
 	local levelModifier = attackerLevel;
@@ -183,23 +184,29 @@ local function GetHitTooltip_Wrath(dpsType, ratingBonus)
 	end
 end
 
-local GetHitTooltipText = GetHitTooltip_PreWrath;
-
+local function GetHitTooltipText(dpsType, ratingBonus)
+	local hitBonus = _Ranged:GetHitBonus() or 0
+	local text = dpsType == 1 and MELEE_HIT_TOOLTIP or RANGED_HIT_TOOLTIP
+	if not text then
+		return ""
+	end
+	return format(text, hitBonus)
+end
 
 local function PaperDollFrame_SetRating(statFrame, ratingIndex)
 	--Derivative of the global function with same name
 	local statName = _G["COMBAT_RATING_NAME"..ratingIndex];
-	local rating = GetCombatRating(ratingIndex);
-	local ratingBonus = GetCombatRatingBonus(ratingIndex);
+	local rating = GetCombatRating(ratingIndex) or 0
+	local ratingBonus = GetCombatRatingBonus(ratingIndex) or 0
 
 	statFrame:SetLabelAndValue(statName, rating, (rating and rating == 0));
 
-	statFrame.tooltip = HIGHLIGHT_FONT_COLOR_CODE..statName.." "..rating..FONT_COLOR_CODE_CLOSE;
+	statFrame.tooltip = HIGHLIGHT_FONT_COLOR_CODE..statName.." "..rating..FONT_COLOR_CODE_CLOSE
 
 	if ( ratingIndex == CR_HIT_MELEE ) then
-		statFrame.tooltip2 = GetHitTooltipText(1, ratingBonus);
+		statFrame.tooltip2 = GetHitTooltipText(1, ratingBonus)
 	elseif ( ratingIndex == CR_HIT_RANGED ) then
-		statFrame.tooltip2 = GetHitTooltipText(2, ratingBonus);
+		statFrame.tooltip2 = GetHitTooltipText(2, ratingBonus)
 	elseif ( ratingIndex == CR_DODGE ) then
 		statFrame.tooltip2 = format(CR_DODGE_TOOLTIP, ratingBonus);
 	elseif ( ratingIndex == CR_PARRY ) then
@@ -293,7 +300,7 @@ local function GetEffectiveCrit()
 	local rating;
 	local spellCrit, rangedCrit, meleeCrit;
 	local critChance;
-	
+
 	-- Start at 2 to skip physical damage
 	local holySchool = 2;
 	local minCrit = GetSpellCritChance(holySchool);
@@ -453,7 +460,7 @@ function UpdateFunc.MeleeDamage(object)
 		else
 			color = colorNeg;
 		end
-		if ( ( displayMin < 100 ) and ( displayMax < 100 ) ) then 
+		if ( ( displayMin < 100 ) and ( displayMax < 100 ) ) then
 			valueText = color..displayMin.." - "..displayMax.."|r";
 		else
 			valueText = color..displayMin.."-"..displayMax.."|r";
@@ -563,7 +570,7 @@ function UpdateFunc.Expertise(object)
 	end
 	object:SetLabelAndValue(STAT_EXPERTISE, text, (expertise == 0) and (offhandExpertise == 0));
 	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..STAT_EXPERTISE.." "..text..FONT_COLOR_CODE_CLOSE;
-	
+
 	local expertisePercent, offhandExpertisePercent = GetExpertisePercent();
 	expertisePercent = format("%.2f", expertisePercent);
 	if( offhandSpeed ) then
@@ -617,7 +624,7 @@ function UpdateFunc.RangedDamage(object)
 		fullDamage = (baseDamage + physicalBonusPos + physicalBonusNeg) * percent;
 		totalBonus = (fullDamage - baseDamage);
 		if (rangedAttackSpeed == 0) then
-		-- Egan's Blaster!!! --WHAT?
+			-- Egan's Blaster!!! --WHAT?
 			damagePerSecond = math.huge;
 		else
 			damagePerSecond = (max(fullDamage,1) / rangedAttackSpeed);
@@ -694,8 +701,30 @@ function UpdateFunc.RangedAttackPower(object)
 	end
 end
 
+function _Ranged:GetHitBonus()
+	local hitValue = 0
+	local hitFromItems = GetHitModifier() or 0
+	hitValue = hitValue + hitFromItems + (self:GetHitTalentBonus() or 0)
+	return hitValue
+end
+
+function _Ranged:GetHitTalentBonus()
+	local bonus = 0
+	local _, class = UnitClass("player")
+	if class == "HUNTER" then
+		local _, _, _, _, points = GetTalentInfo(2, 27)
+		bonus = (points or 0) * 1 -- 0-3% Focused Aim
+	end
+	return bonus
+end
+
 function UpdateFunc.RangedHitRating(object)
-	PaperDollFrame_SetRating(object, CR_HIT_RANGED);
+	local hitBonus = _Ranged:GetHitBonus() or 0
+	local hitBonusText = format("%.2f%%", hitBonus)
+
+	object:SetLabelAndValue(STAT_HIT_CHANCE or "Hit Chance", hitBonusText)
+	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE .. (STAT_HIT_CHANCE or "Hit Chance") .. " " .. hitBonusText .. FONT_COLOR_CODE_CLOSE
+	object.tooltip2 = GetHitTooltipText(2, hitBonus)
 end
 
 function UpdateFunc.RangedCritChance(object)
@@ -1314,8 +1343,8 @@ local LAYOUTS = {
 };
 
 do
-    local expansionID = NarciClassicAPI.GetExpansionID();
-    if expansionID == 1 then
+	local expansionID = NarciClassicAPI.GetExpansionID();
+	if expansionID == 1 then
 		LAYOUTS = {
 			vital = {"Health", "Power"},
 			base = {"Strengh", "Agility", "Stamina", "Intellect", "Spirit", "Armor"},
@@ -1330,7 +1359,7 @@ do
 		table.insert(LAYOUTS.melee, "Mastery");
 		table.insert(LAYOUTS.ranged, "Mastery");
 		table.insert(LAYOUTS.spell, "Mastery");
-    end
+	end
 end
 
 local AttributeController = {};
@@ -1520,7 +1549,8 @@ function AttributeController:UpdateResistance()
 	local base, resistance, positive, negative;
 
 	for i, f in ipairs(self.magicRes) do
-		base, resistance, positive, negative = UnitResistance("player", i);
+		local resistanceIndex = (i == 1) and 6 or i;  -- Use 6 for arcane (first icon), otherwise use i
+		base, resistance, positive, negative = UnitResistance("player", resistanceIndex);
 		if resistance > 0 then
 			f.Value:SetText(resistance);
 			f.Value:SetTextColor(0.92, 0.92, 0.92);
@@ -1535,7 +1565,7 @@ function AttributeController:UpdateResistance()
 			f.nonZero = nil;
 		end
 
-		if positive > 0 then	--don't show UI if the only source of resistance is from racials
+		if positive > 0 then    --don't show UI if the only source of resistance is from racials
 			anyRes = true;
 		end
 	end
