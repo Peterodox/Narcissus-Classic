@@ -707,10 +707,26 @@ function UpdateFunc.RangedAttackPower(object)
 	end
 end
 
+function _Ranged:HasBiznicksScope()
+	local rangedSlot = 18  -- The slot ID for ranged weapons
+	local itemLink = GetInventoryItemLink("player", rangedSlot)
+	if itemLink then
+		local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, enchantId = string.find(itemLink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+):?(%d*):?(%d*):?(%d*):?(%d*):?(%d*):?(%-?%d*):?(%-?%d*):?(%d*):?(%d*)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
+		return enchantId == "2523"  -- Biznicks 247x128 Accurascope enchant ID
+	end
+	return false
+end
+
 function _Ranged:GetHitBonus()
 	local hitValue = 0
 	local hitFromItems = GetHitModifier() or 0
 	hitValue = hitValue + hitFromItems + (self:GetHitTalentBonus() or 0)
+	
+	-- Add Biznicks scope bonus if equipped (ranged only)
+	if self:HasBiznicksScope() then
+		baseHitBonus = baseHitBonus + 3
+	end
+	
 	return hitValue
 end
 
@@ -798,6 +814,10 @@ function UpdateFunc.RangedHitRating(object)
 	object:SetLabelAndValue(STAT_HIT_CHANCE or "Hit Chance", hitBonusText)
 	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE .. (STAT_HIT_CHANCE or "Hit Chance") .. " " .. hitBonusText .. FONT_COLOR_CODE_CLOSE
 	object.tooltip2 = GetHitTooltipText(2, hitBonus)
+
+	if _Ranged:HasBiznicksScope() then
+		object.tooltip2 = object.tooltip2 .. "\n" .. "Includes +3% from Biznicks 247x128 Accurascope"
+	end
 end
 
 function UpdateFunc.RangedCritChance(object)
