@@ -76,6 +76,7 @@ local CR_EXPERTISE = CR_EXPERTISE or 24;
 local CR_ARMOR_PENETRATION = CR_ARMOR_PENETRATION or 25;
 
 local _Ranged = {}
+local _Melee = {}
 
 local function PaperDollFrame_GetArmorReduction(armor, attackerLevel)
 	local levelModifier = attackerLevel;
@@ -548,7 +549,12 @@ function UpdateFunc.MeleeAttackPower(object)
 end
 
 function UpdateFunc.MeleeHitRating(object)
-	PaperDollFrame_SetRating(object, CR_HIT_MELEE);
+	local hitBonus = _Melee:GetHitBonus()
+	local hitRating = GetCombatRating(CR_HIT_MELEE) or 0
+
+	object:SetLabelAndValue(STAT_HIT_CHANCE, format("%.2f%%", hitBonus))
+	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE .. STAT_HIT_CHANCE .. " " .. format("%.2f%%", hitBonus) .. FONT_COLOR_CODE_CLOSE
+	object.tooltip2 = format(CR_HIT_MELEE_TOOLTIP, UnitLevel("player"), hitBonus)
 end
 
 function UpdateFunc.MeleeCritChance(object)
@@ -716,6 +722,73 @@ function _Ranged:GetHitTalentBonus()
 		bonus = (points or 0) * 1 -- 0-3% Focused Aim
 	end
 	return bonus
+end
+
+function _Melee:GetHitBonus()
+	local hitValue = 0
+	local hitFromItems = GetCombatRatingBonus(CR_HIT_MELEE) or GetHitModifier() or 0
+	hitValue = hitValue + hitFromItems + self:GetHitTalentBonus() + self:GetHitFromBuffs()
+	return hitValue
+end
+
+function _Melee:GetHitTalentBonus()
+	local mod = 0
+	local _, _, classId = UnitClass("player")
+	local expansionID = NarciClassicAPI.GetExpansionID()
+
+	if classId == 1 and expansionID >= 3 then -- WARRIOR in Wrath or later
+		local _, _, _, _, points, _, _, _ = GetTalentInfo(2, 18)
+		mod = points * 1 -- 0-3% Precision
+	elseif classId == 3 and expansionID >= 3 then -- HUNTER in Wrath or later
+		local _, _, _, _, points, _, _, _ = GetTalentInfo(2, 27)
+		mod = points * 1 -- 0-3% Focused Aim
+	elseif classId == 7 then -- SHAMAN
+		if expansionID >= 3 then -- Wrath or later
+			if select(2, UnitAttackSpeed("player")) > 0 then
+				local _, _, _, _, dualWielding, _, _, _ = GetTalentInfo(2, 19)
+				mod = mod + dualWielding * 2 -- 0-6% Dual Wielding Specialization
+			end
+		else
+			local _, _, _, _, naturesGuidance, _, _, _ = GetTalentInfo(3, 3)
+			mod = naturesGuidance * 1 -- 0-3% Nature's Guidance
+		end
+	elseif classId == 2 and expansionID == 2 then -- PALADIN in TBC
+		local _, _, _, _, points, _, _, _ = GetTalentInfo(2, 15)
+		mod = points * 1 -- 0-3% Precision
+	elseif classId == 4 then -- ROGUE
+		local _, _, _, _, points, _, _, _ = GetTalentInfo(2, 1)
+		mod = points * 1 -- 0-5% Precision
+	elseif classId == 6 and expansionID >= 3 then -- DEATH KNIGHT in Wrath or later
+		if select(2, UnitAttackSpeed("player")) > 0 then
+			local _, _, _, _, points, _, _, _ = GetTalentInfo(2, 16)
+			mod = points * 1 -- 0-3% Nerves of Cold Steel
+		end
+	end
+
+	return mod
+end
+
+function _Melee:GetHitFromBuffs()
+	local mod = 0
+	local otherDraeneiInGroup = false
+
+	for i = 1, 40 do
+		local _, _, _, _, _, _, _, _, _, spellId, _ = UnitAura("player", i, "HELPFUL")
+		if spellId == nil then
+			break
+		end
+
+		if spellId == 6562 then
+			mod = mod + 1 -- 1% from Heroic Presence
+			otherDraeneiInGroup = true
+		end
+	end
+
+	if (not otherDraeneiInGroup) and (IsSpellKnown(6562) or IsSpellKnown(28878)) then
+		mod = mod + 1
+	end
+
+	return mod
 end
 
 function UpdateFunc.RangedHitRating(object)
