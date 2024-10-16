@@ -550,11 +550,11 @@ end
 
 function UpdateFunc.MeleeHitRating(object)
 	local hitBonus = _Melee:GetHitBonus()
-	local hitRating = GetCombatRating(CR_HIT_MELEE) or 0
+	local hitPercentage = hitBonus  -- In Classic, this is already a percentage
 
-	object:SetLabelAndValue(STAT_HIT_CHANCE, format("%.2f%%", hitBonus))
-	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE .. STAT_HIT_CHANCE .. " " .. format("%.2f%%", hitBonus) .. FONT_COLOR_CODE_CLOSE
-	object.tooltip2 = format(CR_HIT_MELEE_TOOLTIP, UnitLevel("player"), hitBonus)
+	object:SetLabelAndValue(STAT_HIT_CHANCE, format("%.2f%%", hitPercentage))
+	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE .. STAT_HIT_CHANCE .. " " .. format("%.2f%%", hitPercentage) .. FONT_COLOR_CODE_CLOSE
+	object.tooltip2 = format("Increases your chance to hit with melee attacks by %.2f%%.", hitPercentage)
 end
 
 function UpdateFunc.MeleeCritChance(object)
@@ -720,13 +720,12 @@ end
 function _Ranged:GetHitBonus()
 	local hitValue = 0
 	local hitFromItems = GetHitModifier() or 0
-	hitValue = hitValue + hitFromItems + (self:GetHitTalentBonus() or 0)
-	
-	-- Add Biznicks scope bonus if equipped (ranged only)
+	hitValue = hitValue + hitFromItems + self:GetHitTalentBonus()
+
 	if self:HasBiznicksScope() then
-		baseHitBonus = baseHitBonus + 3
+		hitValue = hitValue + 3
 	end
-	
+
 	return hitValue
 end
 
@@ -742,8 +741,20 @@ end
 
 function _Melee:GetHitBonus()
 	local hitValue = 0
-	local hitFromItems = GetCombatRatingBonus(CR_HIT_MELEE) or GetHitModifier() or 0
-	hitValue = hitValue + hitFromItems + self:GetHitTalentBonus() + self:GetHitFromBuffs()
+	local hitFromItems = GetHitModifier() or 0
+	local hitFromTalents = self:GetHitTalentBonus()
+	local hitFromBuffs = self:GetHitFromBuffs()
+
+	-- In Classic, hit rating might be a flat percentage rather than a rating
+	hitValue = hitFromItems + hitFromTalents + hitFromBuffs
+
+	-- Debug logging
+	-- print("Melee Hit Bonus Calculation:")
+	-- print("Hit from items:", hitFromItems)
+	-- print("Hit from talents:", hitFromTalents)
+	-- print("Hit from buffs:", hitFromBuffs)
+	-- print("Total hit value:", hitValue)
+
 	return hitValue
 end
 
@@ -901,7 +912,12 @@ function UpdateFunc.SpellBonusHealing(object)
 end
 
 function UpdateFunc.SpellHitRating(object)
-	PaperDollFrame_SetRating(object, CR_HIT_SPELL);
+	local hitBonus = GetSpellHitModifier() or 0
+	local hitBonusText = format("%.2f%%", hitBonus)
+
+	object:SetLabelAndValue(STAT_HIT_CHANCE or "Spell Hit Chance", hitBonusText)
+	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE .. (STAT_HIT_CHANCE or "Spell Hit Chance") .. " " .. hitBonusText .. FONT_COLOR_CODE_CLOSE
+	object.tooltip2 = format(CR_HIT_SPELL_TOOLTIP, UnitLevel("player"), hitBonus)
 end
 
 function UpdateFunc.SpellCritChance(object)
