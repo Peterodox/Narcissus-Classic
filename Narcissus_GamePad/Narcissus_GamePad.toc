@@ -1,0 +1,25 @@
+## Interface: 11504, 40400
+## Plain Title: Narcissus GamePad
+## Version: 1.0
+## LoadOnDemand: 1
+## RequiredDeps: Narcissus
+
+## Title: Narcissus GamePad
+
+## Author: Peterodox
+
+## Notes: Native game pad support for Narcissus UI|nCreate a macro |cff959595/Narci|r to open the character UI and exit with BACK button
+## Notes-zhCN: 使用手柄操控Narcisus
+## Notes-zhTW: 使用手柄操控Narcisus
+
+## IconTexture: Interface\AddOns\Narcissus\Art\Logos\AddonListIconL
+
+Code\Preload.lua
+
+Code\Camera.lua
+Code\Scroll.lua
+
+Code\UI\UI.xml
+Code\ActionGroups\ActionGroups.xml
+
+Main.lua

@@ -88,7 +88,7 @@ local function OnEnterHandlerOnUpdate_ShowNewSet(self, elapsed)
                 NarciGameTooltip:HideTooltip();
                 NarciGameTooltip:SetOwner(self.owner, "ANCHOR_NONE");
                 NarciGameTooltip:SetPoint("TOPRIGHT", self.owner, "TOPLEFT", -8, -8);
-                NarciGameTooltip:SetText(PAPERDOLL_NEWEQUIPMENTSET, 1, 1, 1, true);
+                NarciGameTooltip:SetText(L["New Set"], 1, 1, 1, true);
                 NarciGameTooltip:AddLine(L["Equipment Gesture Create"], 0.25, 0.78, 0.92, true);
                 NarciGameTooltip:Show();
                 NarciGameTooltip:FadeIn();
@@ -96,7 +96,7 @@ local function OnEnterHandlerOnUpdate_ShowNewSet(self, elapsed)
                 GameTooltip:Hide();
                 GameTooltip:SetOwner(self.owner, "ANCHOR_NONE");
                 GameTooltip:SetPoint("TOPLEFT", self.owner, "TOPRIGHT", 2, 0);
-                GameTooltip:SetText(PAPERDOLL_NEWEQUIPMENTSET, 1, 1, 1, true);
+                GameTooltip:SetText(L["New Set"], 1, 1, 1, true);
                 GameTooltip:AddLine(L["Equipment Gesture Create"], 0.25, 0.78, 0.92, true);
                 GameTooltip:Show();
             end
@@ -164,7 +164,7 @@ local function UnlockAllSetButtons()
     end
 end
 
-local function ShorltyBlockMotion()
+local function BrieflyBlockMotion()
     LockAllSetButtons();
     After(0, UnlockAllSetButtons);
 end
@@ -174,17 +174,6 @@ local function NameEditor_Cancel()
     NameEditor:SetText("");
     NameEditor:ClearAllPoints();
 end
-
-local function ExitEditMode()
-    EDIT_MODE = nil;
-    NameEditor_Cancel();
-    IconSelector:Close();
-    ToggleBlackScreen(false);
-    MainFrame:SendButtonToTop();
-    OverwriteButton:Hide();
-    DeleteButton:Hide();
-end
-
 
 local function EditButton_SetMode(self, mode, disable)
     self.mode = mode;
@@ -285,6 +274,7 @@ local function PlaceMouseOverFrame(equipmentSetButton, showEditButton)
         MouseOverFrame:SetPoint("BOTTOMRIGHT", equipmentSetButton, "BOTTOMRIGHT", 0, 0);
         MouseOverFrame:SetFrameLevel(level);
         MouseOverFrame:Show();
+        equipmentSetButton.Name:SetTextColor(1, 1, 1);
         if showEditButton then
 
         end
@@ -297,7 +287,7 @@ end
 
 local function DeleteButton_OnLongClick(setID)
     DeleteSet(setID);
-    ExitEditMode();
+    MainFrame:ExitEditMode();
     if FocusedButton then
         FocusedButton:OnLeave();
     end
@@ -305,11 +295,11 @@ end
 
 
 local function CancelChanges()
-    ExitEditMode();
+    MainFrame:ExitEditMode();
 
     if FocusedButton then
         FocusedButton.Name:Show();
-        if true or IconSelector:IsChanged()then
+        if IconSelector:IsChanged()then
             if FocusedButton.setID then
                 FocusedButton:SetSetID(FocusedButton.setID);
             else
@@ -319,7 +309,7 @@ local function CancelChanges()
         FocusedButton:OnLeave();
     end
 
-    ShorltyBlockMotion();
+    BrieflyBlockMotion();
 end
 
 local function ConfirmChanges()
@@ -343,7 +333,7 @@ local function ConfirmChanges()
         end
     end
 
-    ExitEditMode();
+    MainFrame:ExitEditMode();
 
     if FocusedButton then
         FocusedButton.Name:Show();
@@ -360,7 +350,7 @@ local function OverwriteButton_OnLongClick(setID)
         icon = IconSelector:GetSelectedIcon();
     end
     C_EquipmentSet.SaveEquipmentSet(setID, icon);
-    ExitEditMode();
+    MainFrame:ExitEditMode();
     if FocusedButton then
         FocusedButton:OnLeave();
     end
@@ -392,7 +382,7 @@ local function EditEquipmentSetButton(button)
         DeleteButton:SetLongClick(DeleteButton_OnLongClick, setID);
     else
         local sets = C_EquipmentSet.GetEquipmentSetIDs() or {};
-        defaultName = (PAPERDOLL_NEWEQUIPMENTSET or "New Set") .." "..(#sets + 1);
+        defaultName = (L["New Set"]) .." "..(#sets + 1);
         icon = 134400;
         EditButton_SetMode(OverwriteButton, "create");
         EditButton_SetMode(DeleteButton, "cancel");
@@ -643,7 +633,12 @@ function NarciEquipmentSetButtonMixin:SetSetID(setID)
     else
         self.Name:SetText("|cfff05253".. name .."|r");
     end
-    self.Name:SetTextColor(0.81, 0.78, 0.62);
+
+    if FocusedButton and FocusedButton == self then
+        self.Name:SetTextColor(1, 1, 1);
+    else
+        self.Name:SetTextColor(0.81, 0.78, 0.62);
+    end
 
     self.EquippedMarker:SetShown(isEquipped);
     if isEquipped then
@@ -657,7 +652,7 @@ end
 function NarciEquipmentSetButtonMixin:SetNewSet()
     self.Icon:SetTexture("Interface/AddOns/Narcissus/Art/Modules/EquipmentSetManager/UI");
     self.Icon:SetTexCoord(0, 0.1875, 0.25, 0.4375);
-    self.Name:SetText(PAPERDOLL_NEWEQUIPMENTSET);
+    self.Name:SetText(L["New Set"]);
     self.Name:SetTextColor(0.67, 0.67, 0.67);
     self.EquippedMarker:Hide();
     self:Show();
@@ -725,7 +720,7 @@ end
 
 local function NameEditor_OnEvent(self, event, ...)
     if not ( self:GetParent():IsMouseOver() or IconSelector:IsMouseOver() or DeleteButton:IsMouseOver() or OverwriteButton:IsMouseOver() ) then
-        ShorltyBlockMotion();
+        BrieflyBlockMotion();
         CancelChanges();
     end
 end
@@ -864,6 +859,10 @@ function NarciEquipmentSetManagerMixin:OnHide()
 
     OnEnterHandler:Stop();
     IconSelector:UnloadIcons();
+
+    if EDIT_MODE then
+        CancelChanges();
+    end
 end
 
 function NarciEquipmentSetManagerMixin:OnMouseWheel(delta)
@@ -1000,6 +999,10 @@ function NarciEquipmentSetManagerMixin:Update()
     if not NARCISSUS_MODE then
         self:SetHeight(24 + 36*numButtons);
     end
+
+    if NARCISSUS_MODE then
+        self:OnUpdateComplete();
+    end
 end
 
 local AnimationFrame;
@@ -1038,6 +1041,10 @@ function NarciEquipmentSetManagerMixin:HideUI()
     AnimationFrame.total = 0;
     AnimationFrame:SetScript("OnUpdate", HideFrame_OnUpdate);
     AnimationFrame:Show();
+
+    if EDIT_MODE then
+        CancelChanges();
+    end
 end
 
 function NarciEquipmentSetManagerMixin:SendButtonToTop(topButton)
@@ -1059,6 +1066,39 @@ function NarciEquipmentSetManagerMixin:SendButtonToTop(topButton)
     end
 end
 
+function NarciEquipmentSetManagerMixin:GetSetButtons()
+    local buttons = {};
+    local n = 0;
+    for _, button in ipairs(SetButtons) do
+        if button:IsShown() then
+            n = n + 1;
+            buttons[n] = button;
+        end
+    end
+    return buttons
+end
+
+function NarciEquipmentSetManagerMixin:CancelChanges()
+    CancelChanges();
+end
+
+function NarciEquipmentSetManagerMixin:ConfirmChanges()
+    ConfirmChanges();
+end
+
+function NarciEquipmentSetManagerMixin:ExitEditMode()
+    EDIT_MODE = nil;
+    NameEditor_Cancel();
+    IconSelector:Close();
+    ToggleBlackScreen(false);
+    MainFrame:SendButtonToTop();
+    OverwriteButton:Hide();
+    DeleteButton:Hide();
+end
+
+function NarciEquipmentSetManagerMixin:OnUpdateComplete()
+
+end
 
 
 

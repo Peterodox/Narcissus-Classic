@@ -36,6 +36,7 @@ NARCI_WORDBREAK_COMMA = ", ";
 
 NARCI_CLASSIC_NOT_AVAILABLE = "|cffff5050Currently not available in Classic|r";
 
+
 --Date--
 L["Today"] = COMMUNITIES_CHAT_FRAME_TODAY_NOTIFICATION;
 L["Yesterday"] = COMMUNITIES_CHAT_FRAME_YESTERDAY_NOTIFICATION;
@@ -88,13 +89,16 @@ L["Toolbar Camera Button Tooltip"] = "Temporarily change camera settings."
 
 L["Toolbar Preferences Button Tooltip"] = "Open Preferences panel.";
 
+
 --Special Source--
 L["Heritage Armor"] = "Heritage Armor";
 L["Secret Finding"] = "Secret Finding";
 
+
 --Title Manager--
 L["Open Title Manager"] = "Open Title Manager";
 L["Close Title Manager"] = "Close Title Manager";
+
 
 --Alias--
 L["Use Alias"] = "Switch to Alias";
@@ -123,6 +127,7 @@ L["Markdown"] = "Markdown";
 L["Export Includes"] = "Export Includes...";
 L["3D Model"] = "3D Model";
 L["Equipment Slots"] = "Equipment Slots";
+
 
 --Preferences--
 L["Override"] = "Override";
@@ -258,6 +263,7 @@ L["Expansion Features"] = "Expansion Features";
 L["Loop Animation"] = "Loop Animation";
 L["Speedy Screenshot Alert"] = "Remove \"UI Hidden\" Message";
 
+
 --Model Control--
 L["Ranged Weapon"] = "Ranged Weapon";
 L["Melee Animation"] = "Melee Animation";
@@ -338,6 +344,7 @@ L["Return"] = "Return";
 L["Close"] = "Close";
 L["Change Pack"] = "Change Pack";
 
+
 --Dressing Room--
 L["Undress"] = "Undress";
 L["Favorited"] = "Favorited";
@@ -352,6 +359,7 @@ L["Show Taint Solution"] = "How to solve this issue?";
 L["Taint Solution Step1"] = "1. Reload your UI.";
 L["Taint Solution Step2"] = "2. "..NARCI_MODIFIER_CONTROL.." + Left-click on an item to open the dressing room.";
 
+
 --NPC Browser--
 NARCI_NPC_BROWSER_TITLE_LEVEL = ".*%?%?.?";      --Level ?? --Use this to check if the second line of the tooltip is NPC's title or unit type
 L["NPC Browser"] = "NPC Browser";
@@ -364,6 +372,7 @@ L["Loading Database"] = "Loading Database...\nYour screen could freeze for a few
 L["Other Last Name Format"] = "Other "..NARCI_COLOR_GREY_70.."%s(s)|r:\n";
 L["Too Many Matches Format"] = "\nOver %s matches.";
 
+
 --Solving Lower-case or Abbreviation Issue--
 NARCI_STAT_STRENGTH = SPEC_FRAME_PRIMARY_STAT_STRENGTH;
 NARCI_STAT_AGILITY = SPEC_FRAME_PRIMARY_STAT_AGILITY;
@@ -375,6 +384,7 @@ NARCI_CRITICAL_STRIKE = STAT_CRITICAL_STRIKE;
 NARCI_AZERITE_POWERS = "Azerite Powers";
 L["Gem Tooltip Format1"] = "%s and %s";
 L["Gem Tooltip Format2"] = "%s, %s and %s more...";
+
 
 --Equipment Set Manager
 L["Equipped Item Level Format"] = "Equipped %s";
@@ -404,10 +414,15 @@ L["Equipment Delete Set"] = "Delete Set";
 L["Equipment Delete Tooltip"] = "Click and hold to delete this set.";
 L["Equipment Save Name"] = "Save name and icon.";
 L["Item Switching In Progress"] = "Switching...";
+L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET or "New Set";
+L["Edit Loadout"] = EDIT or "Edit";
+L["Equipment"] = "Equipment";
+L["Equipment Sets Abbrev"] = "Sets";
 
 
 NARCI_ICON_SELECTOR = "Icon Selector";
 NARCI_DELETE_SET_WITH_LONG_CLICK = "Delete Set\n|cff808080(click and hold)|r";
+
 
 --Corruption System
 L["Corruption System"] = "Corruption";
@@ -437,6 +452,7 @@ L["Corruption Effect Format3"] = "|cffffffff%s|r damage\n|cffffffff%s%%|r of you
 L["Corruption Effect Format4"] = "Struck by the Thing From Beyond triggers other debuffs";
 L["Corruption Effect Format5"] = "|cffffffff%s%%|r damage\\healing taken modified";
 
+
 --Text Overlay Frame
 L["Text Overlay Button Tooltip1"] = "Simple Speech Balloon";
 L["Text Overlay Button Tooltip2"] = "Advanced Speech Balloon";
@@ -444,6 +460,7 @@ L["Text Overlay Button Tooltip3"] = "Talking Head";
 L["Text Overlay Button Tooltip4"] = "Floating Subtitle";
 L["Text Overlay Button Tooltip5"] = "Black Bar Subtitle";
 L["Visibility"] = "Visibility";
+
 
 --Achievement Frame--
 L["Use Achievement Panel"] = "Use As Primary Achievement Panel";
@@ -460,6 +477,7 @@ L["Hide Dates"] = "Hide Dates";
 L["Pinned Entries"] = "Pinned Entries";
 L["Pinned Entry Format"] = "Pinned  %d/%d";
 
+
 --Barbershop--
 L["Save New Look"] = "Save New Look";
 L["No Available Slot"] = "No Available Slot";
@@ -475,6 +493,7 @@ L["Visits"] = "Visits";     --number of visits
 L["Duration"] = "Duration";
 L["Edit Name"] = "Edit Name";
 L["Delete Look"] = "Delete Look\n(Click and Hold)";
+
 
 --Tutorial--
 L["Alert"] = "Warning";
@@ -498,6 +517,7 @@ L["Guide Minimap Button Line1"] = "Narcissus minimap button can now be handled b
 L["Guide NPC Entrance Line1"] = "You can add any NPC into your scene."
 L["Guide NPC Browser Line1"] = "Notable NPCs are listed in the catalog below.\nYou can also search for ANY creatures by name or ID.\nNotice that the first time you use the search function this login, it could take a few seconds to build the search table and your screen might freeze as well.\nYou may untoggle the \"Load on Demand\" option in the Preference Pane so that the database will be constructed right after you log in.";
 
+
 --Splash--
 L["See Ads"] = "See ads from our authentic sponsor";    --Not real ads!
 L["Splash Category1"] = L["Photo Mode"];
@@ -517,8 +537,10 @@ L["Splash Content6 Description"] = "-The Soulbinds UI has been updated. You can 
 L["Splash Content7 Name"] = "Visuals";
 L["Splash Content7 Description"] = "-The hexagon item border gets a new look. Certain items have unique appearances.";
 
+
 --Credits--
 L["Credit List Extra"] = "Marlamin | WoW.tools\nKeyboardturner | Avid Bug Finder(Generator)\nHubbotu | Translator - Russian\nMeorawr | Wondrous Wisdomball";
+
 
 --Conversation--
 L["Q1"] = "What is this?";
@@ -531,11 +553,13 @@ L["A2"] = "Ha, that's what she said.";
 L["A3"] = "Fine...fine..."
 L["A4"] = "Sorry, you can't. It's for safety you know.";
 
+
 --Search--
 L["Search Result Singular"] = "%s result";
 L["Search Result Plural"] = "%s results";
 L["Search Result Overflow"] = "%s+ results";
 L["Search Result None"] = CLUB_FINDER_APPLICANT_LIST_NO_MATCHING_SPECS;
+
 
 --Weapon Browser--
 L["Draw Weapon"] = "Draw Weapon";
@@ -545,10 +569,12 @@ L["WeaponBrowser Guide ModelType"] = "Some items are limited to certain type of 
 L["WeaponBrowser Guide DressUpModel"] = "This will be the default type if your target is a player unless you are holding <%s> while creating it.";
 L["WeaponBrowser Guide CinematicModel"] = "The model type will always be Cinematic if the creature is an NPC. You cannot sheathe weapons.";
 
+
 --Pet Stables--
 L["PetStable Tooltip"] = "Choose a pet from your stable";
 L["PetStable Loading"] = "Retrieving Pet Info";
 L["PetStable Alert NoData"] = "Visit a Stable Master to cache pet data.";
+
 
 --Domination Item--
 L["Item Bonus"] = "Bonus:";
@@ -557,6 +583,7 @@ L["Extract Shard"] = "Extract Shard";
 L["No Service"] = "No Service";
 L["Shards Disabled"] = "Shards of Domination are disabled outside the Maw.";
 
+
 --Mythic+ Leaderboard--
 L["Mythic Plus"] = "Mythic+";
 L["Mythic Plus Abbrev"] = "M+";
@@ -564,6 +591,7 @@ L["Total Runs"] = "Total Runs: ";
 L["Complete In Time"] = "In time";
 L["Complete Over Time"] = "Over time";
 L["Runs"] = "Runs";
+
 
 --Equipment Upgrade--
 L["Temp Enchant"] = "Temporary Enchants";       --ERR_TRADE_TEMP_ENCHANT_BOUND
@@ -576,10 +604,12 @@ L["No Socket"] = "No socket";
 L["No Other Item For Slot"] = "No other item for %s";       --where %s is the slot name
 L["In Bags"] = "In bags";
 
+
 --Statistics--
 S["Narcissus Played"] = "Total time spent in Narcissus";
 S["Format Since"] = "(since %s)";
 S["Screenshots"] = "Screenshots Taken In Narcissus";
+
 
 --Turntable Showcase--
 L["Turntable"] = "Turntable";
@@ -611,10 +641,12 @@ L["Showcase Splash 2"] = "Click the button below to copy items from the Dressing
 L["Showcase Splash 3"] = "Click the button below to spin your character.";
 L["Showcase Splash 4"] = "Record the screen with video recording software then convert it to GIF.";
 
+
 --Item Sets--
 L["Cycle Spec"] = "Press Tab to cycle through specs";
 L["Paperdoll Splash 1"] = "Enable class set indicator?";
 L["Paperdoll Splash 2"] = "Choose a theme";
+
 
 --Outfit Select--
 L["Outfit"] = "Outfit";
@@ -633,5 +665,14 @@ L["Default Outfit Name"] = "Outfit";
 L["Module Transmog Name"] = TRANSMOGRIFICATION or "Transmogrification";
 L["Module Transmog Desc"] = "Save and load outfits when you are at a Transmogrifier."
 
----- Character UI ----
+
+--Character UI--
 L["Ammo Slot No Alternative"] = "No other available ammos";
+
+
+--Game Pad--
+L["GamePad Select"] = "Select";
+L["GamePad Cancel"] = "Cancel";
+L["GamePad Use"] = "Use";
+L["GamePad Equip"] = "Equip";
+L["GamePad Confirm"] = "Confirm";

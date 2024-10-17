@@ -1,5 +1,5 @@
 ## Interface: 40400
-## Version: 1.2.2
+## Version: 1.2.3
 
 ## Title: Narcissus
 

@@ -213,6 +213,8 @@ function NarciItemLevelCenterButtonMixin:OnLoad()
 
 	self:SetScript("OnLoad", nil);
 	self.OnLoad = nil;
+
+	self.gamepadLabel = Narci.L["Equipment Manager"];
 end
 
 local function OnEnterDelay_OnUpdate(self, elapsed)

@@ -1,8 +1,5 @@
 local _, addon = ...
 
-local DIGITS = "%.2f";
-local NO_BONUS_ALPHA = 0.5;
-
 local _G = _G;
 local Narci = Narci;
 local L = Narci.L;
@@ -26,6 +23,7 @@ local GetCombatRating = GetCombatRating;
 local GetCombatRatingBonus = GetCombatRatingBonus;
 local GetSpellBonusDamage = GetSpellBonusDamage;
 local GetSpellCritChance = GetSpellCritChance;
+local IsSpellKnown = IsSpellKnown;
 
 local FONT_COLOR_CODE_CLOSE = FONT_COLOR_CODE_CLOSE;
 local GREEN_FONT_COLOR_CODE = GREEN_FONT_COLOR_CODE;
@@ -45,6 +43,10 @@ end
 
 local function ReturnZero()
 	return 0
+end
+
+local function FormatPercentage(value)
+	return format("%.2f", value).."%"
 end
 
 local ComputePetBonus = ComputePetBonus or ReturnZero;
@@ -75,6 +77,7 @@ local CR_HASTE_SPELL = CR_HASTE_SPELL or 20;
 local CR_EXPERTISE = CR_EXPERTISE or 24;
 local CR_ARMOR_PENETRATION = CR_ARMOR_PENETRATION or 25;
 
+local HitCalculator = {};
 
 local function PaperDollFrame_GetArmorReduction(armor, attackerLevel)
 	local levelModifier = attackerLevel;
@@ -107,9 +110,19 @@ end
 local function SetStatTooltipText(self)
 	DefaultTooltip:ClearAllPoints();
 	DefaultTooltip:SetOwner(self, "ANCHOR_NONE");
-	DefaultTooltip:SetText(self.tooltip);
+	DefaultTooltip:SetText(self.tooltip, 1, 1, 1);
 	if ( self.tooltip2 ) then
-		DefaultTooltip:AddLine(self.tooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+		if type(self.tooltip2) == "table" then
+			for _, line in ipairs(self.tooltip2) do
+				if line.rightText then
+					DefaultTooltip:AddDoubleLine(line.leftText, line.rightText, 1, 0.82, 0, 1, 1, 1);
+				elseif line.leftText then
+					DefaultTooltip:AddLine(line.leftText, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+				end
+			end
+		else
+			DefaultTooltip:AddLine(self.tooltip2, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+		end
 	end
 	if ( self.tooltip3 ) then
 		DefaultTooltip:AddLine(" ");
@@ -131,7 +144,6 @@ function Narci_ShowStatTooltip(self)
 end
 
 local Narci_ShowStatTooltip = Narci_ShowStatTooltip;
-
 
 
 local function PaperDollFormatStat(name, base, posBuff, negBuff, frame)
@@ -849,7 +861,7 @@ function UpdateFunc.Reduction(object)
 	local armorReduction = C_PaperDollInfo.GetArmorEffectiveness(effectiveArmor, UnitLevel(unit)) or 0;
 	armorReduction = 100 * armorReduction;
 	local armorReductionAgainstTarget = C_PaperDollInfo.GetArmorEffectivenessAgainstTarget(effectiveArmor);
-	local armorReductionText = format(DIGITS, armorReduction).."%"
+	local armorReductionText = FormatPercentage(armorReduction);
 
 	object.tooltip = "|cffffffff"..COMBAT_TEXT_SHOW_RESISTANCES_TEXT.." "..armorReductionText.."|r";
 	object.tooltip2 = format(STAT_ARMOR_TOOLTIP, armorReduction);
@@ -1001,7 +1013,7 @@ function UpdateFunc.Crit(object)
 		end
 	end
 
-	local PercentageText = format(DIGITS, critChance).."%"
+	local PercentageText = FormatPercentage(critChance);
 	object.Label:SetText(NARCI_CRITICAL_STRIKE);		--COMBAT_RATING_NAME10
 	object.Value:SetText(PercentageText);
 end
@@ -1037,7 +1049,7 @@ function UpdateFunc.Haste(object)
 	end
 
 	object.Label:SetText(STAT_HASTE);
-	object.Value:SetText(format(DIGITS, haste).."%");
+	object.Value:SetText(FormatPercentage(haste));
 end
 
 function UpdateFunc.MovementSpeed(object)
@@ -1319,9 +1331,9 @@ do
 		LAYOUTS = {
 			vital = {"Health", "Power"},
 			base = {"Strengh", "Agility", "Stamina", "Intellect", "Spirit", "Armor"},
-			melee = {"MeleeDamage", "MeleeAttackSpeed", "MeleeAttackPower", "MeleeHitRating", "MeleeCritChance"},
-			ranged = {"RangedDamage", "RangedAttackSpeed", "RangedAttackPower", "RangedHitRating", "RangedCritChance"},
-			spell = {"SpellBonusDamage", "SpellBonusHealing", "SpellCritChance", "SpellHaste", "Regen"},
+			melee = {"MeleeDamage", "MeleeAttackSpeed", "MeleeAttackPower", "MeleeHitRating_Vanilla", "MeleeCritChance"},
+			ranged = {"RangedDamage", "RangedAttackSpeed", "RangedAttackPower", "RangedHitRating_Vanilla", "RangedCritChance"},
+			spell = {"SpellBonusDamage", "SpellBonusHealing", "SpellHitRating_Vanilla", "SpellCritChance", "SpellHaste", "Regen"},
 			defense = {"Defense", "Reduction", "Dodge", "Parry", "Block"},
 		};
 	elseif expansionID == 3 then
@@ -1564,4 +1576,250 @@ function AttributeController:SetFrameOffset(offsetX)
 	if self.buttons[1] then
 		self.buttons[1]:SetPoint("TOP", Narci_ItemLevelFrame, "BOTTOM", offsetX, -24);		--96 EquipmentSetManager Offset
 	end
+end
+
+function AttributeController:GetNavButtons()
+	return NavBarStat.navButtons
+end
+
+
+do	--Hit Chance Calculator (Classic Era)
+	local GetHitModifier = GetHitModifier;
+	local GetSpellHitModifier = GetSpellHitModifier;
+	local GetTalentInfo = GetTalentInfo;
+	local GetTalentTabInfo = GetTalentTabInfo;
+	local FindAura = AuraUtil.FindAura;
+	local tinsert = table.insert;
+	local band = bit.band;
+
+	local function FormatHitChance(value)
+		return format("%.0f", value).."%"
+	end
+
+	HitCalculator.HitBuffs = {
+		[6562] = 1,
+		[28878] = 1,
+
+		--[132333] = 1,	--debug
+	};
+
+	HitCalculator.HitEnchants_Ranged = {
+		--Extra Enchant ID (SpellItemEnchantment dbc)
+		--[enchantID] = {itemID, value}
+		[2523] = {18283, 3},		--Biznicks 247x128 Accurascope (Ranged Only)
+	};
+
+	HitCalculator.ClassTalents = {
+		--{hitType, tabIndex, talentIndex, {value1, value2, ... (depended on the rank)}, affectSpellTypes = {talentIndex1, ...}}
+		--hitType (bit 000 Melee/Ranged/Spell): 1(Spell), 2(Ranged), 4(Melee), 6(M/R), 5(M/S), 7(ALL), 3(R/S)
+		HUNTER = {
+			{type = 7, tab = 3, index = 8, ranks = {1, 2, 3}},			--Surefooted (3)
+		},
+
+		ROGUE = {
+			{type = 4, tab = 2, index = 1, ranks = {1, 2, 3, 4, 5}},		--Precision (5)
+		},
+
+		SHAMAN = {
+			{type = 5, tab = 3, index = 3, ranks = {1, 2, 3}},			--Nature's Guidance (3)
+		},
+
+		PALADIN = {
+			{type = 4, tab = 2, index = 15, ranks = {1, 2, 3}},			--Precision (3)
+		},
+
+		WARLOCK = {
+			{type = 1, tab = 1, index = 5, ranks = {2, 4, 6, 8, 10}, affectSpellTypes = {1}},			--Suppression (5) Affliction only
+		},
+
+		PRIEST = {
+			{type = 1, tab = 3, index = 3, ranks = {2, 4, 6, 8, 10}, affectSpellTypes = {3}},			--Shadow Focus (5) Shadow only
+		},
+
+		MAGE = {
+			{type = 1, tab = 1, index = 3, ranks = {2, 4, 6, 8, 10}, affectSpellTypes = {1}},			--Arcane Focus (5) Arcane only
+			{type = 1, tab = 3, index = 17, ranks = {2, 4, 6}, affectSpellTypes = {2, 3}},				--Elemental Precision (3) Fire/Frost
+		},
+	};
+
+	HitCalculator.PlayerTalents = HitCalculator.ClassTalents[PLAYER_CLASS];
+
+	HitCalculator.BIT_MELEE = 4;
+	HitCalculator.BIT_RANGED = 2;
+	HitCalculator.BIT_SPELL = 1;
+
+	function HitCalculator:GetHitFromBuff()
+		local bonus = 0;
+		local buffs = {};
+		local value;
+
+		local function predicate(arg1, arg2, arg3, spellName, spellID)
+			value = self.HitBuffs[spellID];
+			if value then
+				tinsert(buffs, {spellName, FormatHitChance(value)});
+				bonus = bonus + value;
+			end
+		end
+
+		FindAura(predicate, "player", "HELPFUL");
+
+		return bonus, buffs
+	end
+
+	function HitCalculator:GetHitFromEnchant(slotID)
+		--Ranged only
+		local bonus = 0;
+		local enchants = {};
+
+		if not (slotID and self.HitEnchants) then
+			return bonus, enchants
+		end
+
+		local itemLink = GetInventoryItemLink("player", slotID);
+		if itemLink then
+			local extraEnchantID = string.match(itemLink, ":(%d+):|h");
+			if extraEnchantID then
+				extraEnchantID = tonumber(extraEnchantID);
+				local info = self.HitEnchants[extraEnchantID];
+				if info then
+					local name = C_Item.GetItemNameByID(info[1]) or (ENSCRIBE or "Enchant");
+					bonus = bonus + info[2];
+					tinsert(enchants, {name, FormatHitChance(bonus)});
+				end
+			end
+		end
+
+		return bonus, enchants
+	end
+
+	function HitCalculator:GetHitFromTalent(damageTypeBitValue)
+		local bonus = 0;
+		local talents = {};
+
+		if self.PlayerTalents then
+			local _, name, rank, value, specName;
+			for _, info in ipairs(self.PlayerTalents) do
+				name, _, _, _, rank = GetTalentInfo(info.tab, info.index);
+				if rank and rank > 0 then
+					value = info.ranks[rank] or 0;
+					if value > 0 then
+						if band(info.type, damageTypeBitValue) == damageTypeBitValue then
+							if info.affectSpellTypes then
+								for _, talentTabIndex in ipairs(info.affectSpellTypes) do
+									_, specName = GetTalentTabInfo(talentTabIndex);
+									tinsert(talents, {name, "("..specName..") "..FormatHitChance(value)});
+								end
+							else
+								bonus = bonus + value;
+								tinsert(talents, {name, FormatHitChance(value)});
+							end
+						end
+					end
+				end
+			end
+		end
+
+		return bonus, talents
+	end
+
+	function HitCalculator:Setup(object, labelText, tooltipFormat, slotID, damageTypeBitValue)
+		local base;
+		if damageTypeBitValue == self.BIT_SPELL then
+			base = GetSpellHitModifier();
+		else
+			base = GetHitModifier()
+		end
+		base = base or 0;
+
+		local bonusFromEnchant, enchants = self:GetHitFromEnchant(slotID);
+		local bonusFromTalent, talents = HitCalculator:GetHitFromTalent(damageTypeBitValue);
+		local bonusFromBuff, buffs = HitCalculator:GetHitFromBuff();
+		local total = base + bonusFromEnchant + bonusFromTalent + bonusFromBuff;
+		local valueText = FormatPercentage(total);
+
+		object.tooltip = labelText.." "..valueText;
+
+		local tooltip2 = {};
+
+		if tooltipFormat then
+			tinsert(tooltip2, {
+				leftText = format(tooltipFormat, UnitLevel("player"), total),
+			});
+		end
+
+		local anyBonus = total > 0;
+
+		if bonusFromEnchant > 0 or (bonusFromTalent > 0 or #talents > 0) or bonusFromBuff > 0 then
+			anyBonus = true;
+			tinsert(tooltip2, {leftText = " "});
+			if base > 0 then
+				tinsert(tooltip2, {
+					leftText = BANK_TAB_ASSIGN_EQUIPMENT_CHECKBOX or "Item",
+					rightText = FormatPercentage(base),
+				});
+			end
+			if bonusFromEnchant > 0 then
+				for _, info in ipairs(enchants) do
+					tinsert(tooltip2, {
+						leftText = info[1],
+						rightText = info[2],
+					});
+				end
+			end
+			if (bonusFromTalent > 0 or #talents > 0) then
+				for _, info in ipairs(talents) do
+					tinsert(tooltip2, {
+						leftText = info[1],
+						rightText = info[2],
+					});
+				end
+			end
+			if bonusFromBuff > 0 then
+				for _, info in ipairs(buffs) do
+					tinsert(tooltip2, {
+						leftText = info[1],
+						rightText = info[2],
+					});
+				end
+			end
+		end
+
+		object.tooltip2 = tooltip2;
+
+		object:SetLabelAndValue(labelText, valueText, not anyBonus);
+	end
+
+	function UpdateFunc.MeleeHitRating_Vanilla(object)
+		HitCalculator.HitEnchants = nil;
+		HitCalculator:Setup(object, _G["COMBAT_RATING_NAME"..CR_HIT_MELEE], _G.CR_HIT_MELEE_TOOLTIP, nil, HitCalculator.BIT_MELEE);
+	end
+
+	function UpdateFunc.RangedHitRating_Vanilla(object)
+		HitCalculator.HitEnchants = HitCalculator.HitEnchants_Ranged;
+		local rangedSlot = 18;
+		HitCalculator:Setup(object, _G["COMBAT_RATING_NAME"..CR_HIT_RANGED], _G.CR_HIT_RANGED_TOOLTIP, rangedSlot, HitCalculator.BIT_RANGED);
+	end
+
+	function UpdateFunc.SpellHitRating_Vanilla(object)
+		HitCalculator.HitEnchants = nil;
+		HitCalculator:Setup(object, _G["COMBAT_RATING_NAME"..CR_HIT_SPELL], _G.CR_HIT_SPELL_TOOLTIP, nil, HitCalculator.BIT_SPELL);
+	end
+
+
+	--debug
+	--[[
+	function OVR()
+		function PlayerTalentFrameTalent_OnEnter(self)
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+			local tab = PanelTemplates_GetSelectedTab(PlayerTalentFrame);
+			local id = self:GetID();
+			GameTooltip:SetTalent(tab, id, PlayerTalentFrame.inspect, PlayerTalentFrame.pet, PlayerTalentFrame.talentGroup, GetCVarBool("previewTalentsOption"));
+			local name, icon, tier, column, rank, maxRank = GetTalentInfo(tab, id);
+			GameTooltip:AddLine(name);
+			GameTooltip:AddDoubleLine(tab, id);
+			GameTooltip:Show();
+			self.UpdateTooltip = PlayerTalentFrameTalent_OnEnter;
+		end
+	end
+	--]]
 end
