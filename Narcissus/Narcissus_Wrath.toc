@@ -1,5 +1,5 @@
 ## Interface: 30403
-## Version: 1.2.2
+## Version: 1.2.4
 
 ## Title: Narcissus
 

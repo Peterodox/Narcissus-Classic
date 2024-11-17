@@ -180,7 +180,7 @@ local function EquipmentManager_PutItemInInventory (action)
             if bag == 0 then
                 PutItemInBackpack();
             else
-				bag = bag + 19; --Player bag 20 - 24
+				bag = C_Container.ContainerIDToInventoryID(bag);
                 PutItemInBag(bag);
             end
             break

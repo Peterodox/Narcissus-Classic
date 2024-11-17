@@ -762,7 +762,7 @@
                             <Color r="0" g="0" b="0" a="1"/>
                             <Gradient orientation="VERTICAL">
                                 <MaxColor a="0.6" r="1" g="1" b="1"/>
-                                <MimColor a="0" r="1" g="1" b="1"/>
+                                <MinColor a="0" r="1" g="1" b="1"/>
                             </Gradient>
                         </Texture>
                     </Layer>
@@ -800,7 +800,7 @@
                             </Anchors>
                             <Gradient orientation="HORIZONTAL">
                                 <MaxColor a="0.6" r="1" g="1" b="1"/>
-                                <MimColor a="0" r="1" g="1" b="1"/>
+                                <MinColor a="0" r="1" g="1" b="1"/>
                             </Gradient>
                         </Texture>
                         <Texture parentKey="BlipCenter" hidden="true">

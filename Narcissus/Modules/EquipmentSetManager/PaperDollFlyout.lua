@@ -122,7 +122,8 @@ local function UnequipSlot()
             if bag == 0 then
                 PutItemInBackpack();
             else
-                bag = bag + 19; --Player bag 20 - 24
+                --bag = bag + 19; --Player bag 20 - 24
+                bag = C_Container.ContainerIDToInventoryID(bag);
                 PutItemInBag(bag);
             end
             anyFreeSlots = true;
@@ -415,7 +416,7 @@ function ShowFlyout(itemButton)
             if not button then
                 FlyoutButtons[i] = CreateFrame("Button", nil, FlyoutFrame, "NarciPaperDollFlyoutButtonTemplate");
                 button = FlyoutButtons[i];
-                button:SetPoint("TOPLEFT", FlyoutFrame, "TOPLEFT", 37*(col - 1), 37*(row - 1));
+                button:SetPoint("TOPLEFT", FlyoutFrame, "TOPLEFT", 37*(col - 1),37*(1 - row));
 
                 button:SetScript("OnEnter", FlyoutButton_OnEnter);
                 button:SetScript("OnLeave", HideTooltip);

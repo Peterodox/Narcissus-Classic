@@ -6,10 +6,10 @@
 
     <GameTooltip name="NarciGameTooltip" hidden="true" clampedToScreen="true" mixin="NarciGameTooltipMixin">
         <KeyValues>
-            <KeyValue key="textLeft1Font" value="NarciFontCapped12" type="string" justifyH="LEFT"/>
-            <KeyValue key="textRight1Font" value="NarciFontCapped12" type="string" justifyH="RIGHT"/>
-            <KeyValue key="textLeft2Font" value="NarciFontNormal10White" type="string" justifyH="LEFT"/>
-            <KeyValue key="textRight2Font" value="NarciFontNormal10White" type="string" justifyH="RIGHT"/>
+            <KeyValue key="textLeft1Font" value="NarciFontCapped12" type="string"/>
+            <KeyValue key="textRight1Font" value="NarciFontCapped12" type="string"/>
+            <KeyValue key="textLeft2Font" value="NarciFontNormal10White" type="string"/>
+            <KeyValue key="textRight2Font" value="NarciFontNormal10White" type="string"/>
         </KeyValues>
         <Layers>
             <Layer level="BACKGROUND">

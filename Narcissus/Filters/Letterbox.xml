@@ -3,7 +3,7 @@
 
     <Script file="Letterbox.lua"/>
 
-	<Frame name="Narci_FullScreenMask" parentKey="ScreenMask" parent="Narci_Vignette" setAllPoint="true" hidden="true">
+	<Frame name="Narci_FullScreenMask" parentKey="ScreenMask" parent="Narci_Vignette" setAllPoints="true" hidden="true">
 		<Layers>
 			<Layer level="OVERLAY">
 				<Texture setAllPoints="true" parentKey="BottomMask" name="Narci_FullScreenMask_Bottom">

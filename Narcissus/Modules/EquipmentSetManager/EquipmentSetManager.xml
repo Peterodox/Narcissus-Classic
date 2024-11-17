@@ -223,7 +223,7 @@
                                     </Gradient>
                                 </Texture>
                             </Layer>
-                            <Layer levle="BACKGROUND">
+                            <Layer level="BACKGROUND">
                                 <Texture parentKey="Shadow" file="Interface\AddOns\Narcissus\Art\Modules\EquipmentSetManager\ConfirmButtonShadow">
                                     <Size x="48" y="48"/>
                                     <Anchors>

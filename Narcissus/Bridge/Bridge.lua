@@ -11,6 +11,7 @@ local PawnTooltipText = "";
 
 
 ---- Hook Function ----
+--[[
 local Bridge = CreateFrame("Frame");
 Bridge:RegisterEvent("PLAYER_ENTERING_WORLD");
 Bridge:SetScript("OnEvent",function(self, event, ...)
@@ -48,3 +49,4 @@ Bridge:SetScript("OnEvent",function(self, event, ...)
         end)
     end
 end)
+--]]
