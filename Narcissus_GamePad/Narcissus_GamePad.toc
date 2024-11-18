@@ -1,4 +1,4 @@
-## Interface: 11504, 40400
+## Interface: 11504, 11505, 40401
 ## Plain Title: Narcissus GamePad
 ## Version: 1.0
 ## LoadOnDemand: 1
