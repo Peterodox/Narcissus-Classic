@@ -257,6 +257,16 @@ function NarciGameTooltipMixin:StopFading()
     self.alpha = nil;
 end
 
+function NarciGameTooltipMixin:RemoveText(removedText)
+    if not self:IsShown() then return end;
+    local numLines = self:NumLines();
+    local lastLine = _G[TOOLTIP_NAME.."TextLeft"..numLines];
+    if lastLine and lastLine:GetText() == removedText then
+        lastLine:SetText(nil);
+        self:Show();
+    end
+end
+
 ---- Equipment Tooltip (for displaying gears/mogs in character frame) ----
 
 local function OnModelLoaded(self)

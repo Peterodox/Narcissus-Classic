@@ -1532,7 +1532,7 @@ function AttributeController:UpdateResistance()
 	local base, resistance, positive, negative;
 
 	for i, f in ipairs(self.magicRes) do
-		base, resistance, positive, negative = UnitResistance("player", i);
+		base, resistance, positive, negative = UnitResistance("player", f.id);
 		if resistance > 0 then
 			f.Value:SetText(resistance);
 			f.Value:SetTextColor(0.92, 0.92, 0.92);

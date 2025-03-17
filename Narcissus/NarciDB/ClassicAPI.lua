@@ -193,7 +193,7 @@ end
 
 local _EquipmentManager_RunAction;
 
-if EquipmentManager_RunAction then
+if EquipmentManager_RunAction and false then
 	_EquipmentManager_RunAction = EquipmentManager_RunAction;
 else
 	function _EquipmentManager_RunAction (action)
@@ -328,16 +328,18 @@ end
 NarciClassicAPI.GetOwnedAmmo = GetOwnedAmmo;
 
 
-local function DoesRangedWeaponRequireAmmo()
-	local rangedItemID = GetInventoryItemID("player", 18);	--requires ranged weapon equipped
-	if not rangedItemID then return end;
-
-	local _, _, _, _, _, _, subclassID = GetItemInfoInstant(rangedItemID);
-
-	return subclassID == 2 or subclassID == 3 or subclassID == 18
+if EXPANSION_ID >= 4 then
+	function NarciClassicAPI.DoesRangedWeaponRequireAmmo()
+		return false
+	end
+else
+	function NarciClassicAPI.DoesRangedWeaponRequireAmmo()
+		local rangedItemID = GetInventoryItemID("player", 18);	--requires ranged weapon equipped
+		if not rangedItemID then return end;
+		local _, _, _, _, _, _, subclassID = GetItemInfoInstant(rangedItemID);
+		return subclassID == 2 or subclassID == 3 or subclassID == 18
+	end
 end
-
-NarciClassicAPI.DoesRangedWeaponRequireAmmo = DoesRangedWeaponRequireAmmo;
 
 
 local function IsAmmoMatched(getBestMatchedAmmo)

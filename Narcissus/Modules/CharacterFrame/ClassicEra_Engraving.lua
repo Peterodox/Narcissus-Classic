@@ -41,9 +41,13 @@ local function EngravingSlot_OnEnter(self)
     tooltip:Hide();
     tooltip:SetOwner(self, "ANCHOR_NONE");
     tooltip:SetPoint("TOPLEFT", self, "TOPRIGHT", 8, 0);
-    if self.spellIDs then
-        tooltip:SetSpellByID(self.spellIDs[1]);
+    if self.skillLineAbilityID then
+        tooltip:SetEngravingRune(self.skillLineAbilityID);
         tooltip:Show();
+
+        local removedText = ENGRAVE_RUNE_TOOLTIP or "<Click to Engrave Rune>";
+        tooltip:RemoveText(removedText);
+
         tooltip:FadeIn();
     else
         tooltip:Hide();
@@ -89,10 +93,10 @@ function EngravingSlotUtil:SetupEngravingSlot(slotButton, engravingInfo)
     if engravingInfo then
         icon = engravingInfo.iconTexture;
         engravingName = engravingInfo.name;
-        slotButton.EngravingSlot.spellIDs = engravingInfo.learnedAbilitySpellIDs;
+        slotButton.EngravingSlot.skillLineAbilityID = engravingInfo.skillLineAbilityID;
     else
         icon = "Interface/PaperDoll/UI-Backpack-EmptySlot";
-        slotButton.EngravingSlot.spellID = nil;
+        slotButton.EngravingSlot.skillLineAbilityID = nil;
     end
     slotButton.EngravingSlot.Icon:SetTexture(icon);
     slotButton.EngravingSlot:Show();

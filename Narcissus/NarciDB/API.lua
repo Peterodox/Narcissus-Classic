@@ -41,8 +41,14 @@ for namespace, data in pairs(WoWAPI) do
     end
 end
 
---[[
-Pending:
-    GetSpellInfo
 
---]]
+if GetMouseFocus then
+    API.GetMouseFocus = GetMouseFocus;
+else
+    function API.GetMouseFocus()
+        local foci = GetMouseFoci();
+        if foci then
+            return foci[1]
+        end
+    end
+end

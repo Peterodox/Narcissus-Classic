@@ -12,7 +12,7 @@ local sin = math.sin;
 local sqrt = math.sqrt;
 local atan2 = math.atan2;
 
-local GetMouseFocus = GetMouseFocus;
+local GetMouseFocus = addon.API.GetMouseFocus;
 
 local MiniButton;
 
@@ -342,7 +342,7 @@ end
 
 function NarciMinimapButtonMixin:OnLoad()
 	MiniButton = self;
-    
+
     self:RegisterEvent("PLAYER_ENTERING_WORLD");
 	self:SetFrameStrata("MEDIUM");
 	self:RegisterForClicks("LeftButtonUp","RightButtonUp","MiddleButtonUp");

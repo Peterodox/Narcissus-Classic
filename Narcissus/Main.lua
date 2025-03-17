@@ -2890,12 +2890,12 @@ end
 
 local function UpdateXmogName()
 	local frame = Narci_XmogNameFrame;
-	UpdatePlayerName(frame);
+
+	frame.MogNameEditBox:SetText(UnitName("player"));
 
 	local armorType = NarciClassicAPI.GetPlayerArmorTypeName();
 	local className, englishClass, _ = UnitClass("player");
 	local _, _, _, rgbHex = GetClassColor(englishClass);
-
 	frame.ArmorString:SetText("|cFFFFD100"..armorType.."|r".."  |  ".."|c"..rgbHex..className.."|r");
 end
 
@@ -2912,7 +2912,7 @@ local function GetWowHeadDressingRoomURL()
 end
 
 local function CopyTexts(textFormat, includeID)
-	local texts = Narci_XmogNameFrame.PlayerName:GetText() or "My Transmog";
+	local texts = Narci_XmogNameFrame.MogNameEditBox:GetText() or "My Transmog";
 	textFormat = textFormat or "text";
 
 	local source;
@@ -2926,7 +2926,7 @@ local function CopyTexts(textFormat, includeID)
 				if includeID and SLOT_TABLE[index].itemID then
 					text = text.." |cFFacacac"..SLOT_TABLE[index].itemID.."|r";
 				end
-				
+
 				source = SLOT_TABLE[index].ItemLevel:GetText();
 				if source and source ~= " " then
 					text = text.." ("..source..")"
@@ -3020,7 +3020,7 @@ local function Narci_XmogButton_OnClick(self)
 		Narci_SnowEffect(false);
 		PlayLetteboxAnimation("OUT");
 
-		Narci_XmogNameFrame.PlayerName:SetText(Narci_PlayerInfoFrame.PlayerName:GetText())
+		Narci_XmogNameFrame.MogNameEditBox:SetText(Narci_PlayerInfoFrame.PlayerName:GetText())
 
 		Toolbar.TransmogListFrame:ShowUI();
 		Toolbar.showTransmogFrame = true;
@@ -3231,162 +3231,6 @@ end
 
 
 
-
-local raceList = {	--For 3D Portait on the top-left
-  --[RaceID] = {[GenderID] = {offsetX, offsetY, distance, angle, CameraIndex, {animation} }}
-	[1]  = {[2] = {10, -10, 0.75, false, 0},	--Human Male √
-		    [3] = {12, -10, 0.71, false, 1, 2},	-- 	    Female	 √
-		},
-
-	[2]  = {[2] = {12, -16, 1.3, 1.1, 0},	--Orcs Male  √
-		    [3] = {18, -16, 0.72, 1.1, 0, 1},	-- 	    Female	 √
-		},
-
-	[3]  = {[2] = {14, -20, 0.88, 0.9, 1},	--Dwarf Male
-		    [3] = {2, -12, 0.75, false, 0},	-- 	    Female	 √
-		},	
-
-	[4]  = {[2] = {16, -5, 1, 1.5, 0},		--NE	Male
-		    [3] = {8, -10, 0.75, false, 0},	-- 	    Female
-		},	
-
-	[5]  = {[2] = {16, -6, 0.6, 0.8, 1},	--UD 	Male
-		    [3] = {10, -6, 0.68, 1.0, 1, 3},	-- 	    Female
-		},
-
-	[6]  = {[2] = {24, -15, 3, 0.6, 1},		--Tauren Male	√
-		    [3] = {24, -8, 1.8, false, 0},	-- 	     Female
-		},	
-
-	[7]  = {[2] = {10, -14, 1, 0.5, 1},			--Gnome Male
-		    [3] = {14, -14, 0.8, 0.55, 0},	-- 	    Female
-		},
-
-	[8]  = {[2] = {16, -4, 1.15, 1.3, 0},	--Troll Male √
-		    [3] = {18, -10, 0.75, 1.3, 0},	-- 	    Female	 √
-		},
-
-	[9] = {[2] = {8, 0, 0.8, 0.6, 0},		--Goblin Male 	 √
-			[3] = {20, -14, 0.85, 0.8, 0},	-- 	    Female 	 √
-		},	
-
-	[10] = {[2] = {8, -5, 0.75, 1.2, 0},		--	BE Male
-			[3] = {0, -4, 0.53, 1.1, 0},	-- 	    Female
-		},	
-
-	[11] = {[2] = {15, -12, 1, 1.4, 0},		--	Goat Male
-			[3] = {10, -10, 0.66, 1.4, 0},	-- 	    Female
-		},	
-
-	[22]  = {[2] = {10, -10, 0.75, false, 0},	--Worgen Male Human Form
-		    [3] = {12, -12, 0.72, 1.1, 1},		--Female	 √
-		},
-
-	[24]  = {[2] = {14, 0, 1.1, 1.15, 0},		--Pandaren Male		√
-		    [3] = {12, 4, 1.0, 1.1, 0},			--Female	 
-		},
-
-	[27]  = {[2] = {24, -10, 0.72, false, 0},	--Highborne Male		√
-		    [3] = {16, -4, 0.70, false, 0},			--Female	 
-		},
-
-	[28]  = {[2] = {24, -15, 2.4, 0.6, 0},		--Tauren Male	√
-		    [3] = {4, -10, 0.62, false, 0},	-- 	     Female
-		},	
-
-	[128]  = {[2] = {18, -18, 1.4, 0.85, 0},	--Worgen Male Wolf Form
-		    [3] = {18, -15, 1.1, 1.25, 0},		--Female	 √
-		},
-
-	[31]  = {[2] = {4, 0, 1.2, 1.6, 0},		--Zandalari Male √
-		    [3] = {18, -12, 0.95, 1.6, 0},		-- 	    Female	 √
-		},
-
-	[32]  = {[2] = {10, -16, 1.25, 1.15, 1},	--Kul'tiran Male	√
-		    [3] = {12, -10, 0.9, 1.5, 0},			--Female	 
-		},
-
-	[36]  = {[2] = {14, -10, 1.2, 1.2, 0, 2},		--Mag'har Male
-		    [3] = {20, -20, 0.75, false, 0, 1},		-- 	    Female	 √
-		},
-
-	[35]  = {[2] = {18, -8, 0.7, false, 1, 2},		--Vulpera Male
-		    [3] = {18, -8, 0.7, false, 1, 2},	-- 	    Female 	 √
-		},
-}
-
-function Narci_PortraitPieces_OnLoad(self)
-	local unit = "player";
-	local a1, a2, a3;
-	local ModelPieces = self.Pieces;
-	local _, _, raceID = UnitRace(unit);
-	local GenderID = UnitSex(unit);
-
-	--print("raceID: "..raceID)
-
-	if raceID == 34 then	 --DarkIron
-		raceID = 3;
-	elseif raceID == 29 then --VE
-		raceID = 10
-	elseif raceID == 28 then --Highmountain
-		raceID = 6
-	elseif raceID == 30 then --LightForged
-		raceID = 11
-	elseif raceID == 25 or raceID == 26 then --Pandaren A|H
-		raceID = 24
-	elseif raceID == 37 then				--Mechagnome
-		raceID = 7;
-	elseif raceID == 22 then --Worgen
-		local _, inAlternateForm = GetAlternateFormInfo();
-		if not inAlternateForm	then
-			raceID = 128;
-		end
-	end
-
-	local model;
-	if raceList[raceID] and raceList[raceID][GenderID] then
-		if Narci_FigureModelReference then
-			Narci_FigureModelReference:SetPoint("CENTER", raceList[raceID][GenderID][1], raceList[raceID][GenderID][2])
-		end
-
-		for i = 1, #ModelPieces do
-			model = ModelPieces[i];
-			model:SetUnit(unit);
-			model:SetCamera(raceList[raceID][GenderID][5]);
-			model:MakeCurrentCameraCustom();
-			if raceList[raceID][GenderID][3] then
-				model:SetCameraDistance(raceList[raceID][GenderID][3])
-			end
-			if raceList[raceID][GenderID][4] then
-				a1, a2, a3 = model:GetCameraPosition();
-				model:SetCameraPosition(a1, a2, raceList[raceID][GenderID][4])
-			end
-			if raceList[raceID][GenderID][6] then
-				model:SetAnimation(2, raceList[raceID][GenderID][6])
-			end
-		end
-	else
-		for i = 1, #ModelPieces do
-			model = ModelPieces[i];
-			model:SetCamera(0);
-			model:MakeCurrentCameraCustom();
-			a1, a2, a3 = model:GetCameraPosition();
-			model:SetCameraPosition(a1, a2, 1.1);
-		end
-	end
-
-	for i = 1, #ModelPieces do
-		model = ModelPieces[i];
-		model:SetFacing(-math.pi/24)	--Front pi/6
-		model:SetAnimation(804, 0);
-		NarciClassicAPI.SetModelLight(model, true, false, - 0.44699833180028 ,  0.72403680806459 , -0.52532198881773, 0.8, 0.7, 0.5, 0.8, 1, 0.8, 0.8, 0.8)
-		model:UndressSlot(1);
-		model:UndressSlot(3);
-		model:UndressSlot(15);		--Remove the cloak
-		model:UndressSlot(16);
-		model:UndressSlot(17);
-	end
-end
 
 --Static Events
 EL:RegisterEvent("ADDON_LOADED");
@@ -3637,7 +3481,7 @@ end
 
 
 function NarciPaperDollDoubleClickTriggerMixin:OnHide()
-	if (self.t < 0.25) and NarcissusDB.EnableDoubleTap then
+	if (self.t < 0.25 and self.t > 0.03) and NarcissusDB.EnableDoubleTap then
 		MiniButton:Click();
 	end
 end

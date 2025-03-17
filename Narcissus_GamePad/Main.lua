@@ -348,8 +348,6 @@ end
 --]]
 
 function Loader:Init()
-    print("Narcissus GamePad enabled");
-
     hooksecurefunc("Narci_Open", function()
         if Narci.isActive then
             KeyListener:Activate();

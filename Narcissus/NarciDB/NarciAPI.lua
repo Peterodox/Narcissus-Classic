@@ -4,6 +4,7 @@ local C_Item = C_Item;
 local After = C_Timer.After;
 local GetItemInfo = API.GetItemInfo;
 local GetItemInfoInstant = API.GetItemInfoInstant;
+local GetMouseFocus = API.GetMouseFocus;
 local UIFrameFadeIn = UIFrameFadeIn;
 local UIFrameFadeOut = UIFrameFadeOut;
 local FadeFrame = NarciFadeUI.Fade;

@@ -977,9 +977,13 @@ function NarciPhotoModeOutfitSelectMixin:AddPlayerActor(unit, model)
         m:SetModelDrawLayer("ARTWORK");
         m:SetFrameLevel(self:GetFrameLevel());
         m:SetScript("OnModelLoaded", PreviewModel_OnModelLoaded);
-        local x, y, z = m:TransformCameraSpaceToModelSpace(0, 0, -0.25);
-        m:SetPosition(x, y, z);
-        m:SetLight(true, false, -1, 1, -1, 0.8, 1, 1, 1, 0.5, 1, 1, 1);
+        local position = {x = 0, y = 0, z = -0.25};
+        position = m:TransformCameraSpaceToModelSpace(position);
+        if position then
+            local x, y, z = position:GetXYZ();
+            m:SetPosition(x, y, z);
+        end
+        NarciClassicAPI.SetModelLight(m, true, false, -1, 1, -1, 0.8, 1, 1, 1, 0.5, 1, 1, 1);
         m:Hide();
     end
     PreviewModels[index]:SetUnit(unit, index);

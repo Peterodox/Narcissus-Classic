@@ -10,90 +10,6 @@
 		</Scripts>		
 	</EditBox>
 
-	<DressUpModel name="ModelPieceTemplate" virtual="true">
-		<Anchors>
-			<Anchor point="TOPLEFT" relativeKey="$parent.$parent.FigureModelReference" relativePoint="TOPLEFT" x="-2" y="14"/>
-			<Anchor point="BOTTOMRIGHT" relativeKey="$parent.$parent.FigureModelReference" relativePoint="BOTTOMRIGHT" x="-2" y="14"/>
-		</Anchors>
-		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture setAllPoints="true" parentKey="Color">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
-					</Anchors>
-					<Color r="1" g="0" b="0" a="0"/>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Scripts>
-			<OnLoad>
-				self:SetUnit("player");
-				local frame = self:GetParent():GetParent();
-				if not frame.Pieces then
-					frame.Pieces = {};
-				end
-				tinsert(frame.Pieces, self);
-			</OnLoad>
-			<!--OnShow function="Narci_PortraitPieces_OnLoad"/-->
-		</Scripts>
-	</DressUpModel>
-
-	<Frame name="ModelPieceFrameTemplate" clipChildren="true" virtual="true" frameLevel="2">
-		<Frames>
-			<DressUpModel inherits="ModelPieceTemplate"/>
-		</Frames>
-	</Frame>
-
-	<!--Frame name="ModelPieceFrame" clipChildren="true" hidden="false">
-		<Anchors>
-			<Anchor point="CENTER" x="0" y="-100"/>
-		</Anchors>
-		<Size x="100" y="100"/>
-		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture setAllPoints="true" parentKey="Color">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="0"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
-					</Anchors>
-					<Color r="1" g="0" b="0" a="0.5"/>
-					<Anchors>
-						<Anchor point="CENTER" x="0" y="0"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Frames>
-			<DressUpModel parent="Test1" virtual="false">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT"/>
-					<Anchor point="BOTTOMRIGHT" relativeKey="$parent" relativePoint="BOTTOMRIGHT"/>
-				</Anchors>
-				<Layers>
-					<Layer level="BACKGROUND">
-						<Texture setAllPoints="true" parentKey="Color">
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="0"/>
-								<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
-							</Anchors>
-							<Color r="0" g="0" b="0" a="0"/>
-							<Anchors>
-								<Anchor point="CENTER" x="0" y="0"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-				</Layers>
-				<Scripts>
-					<OnLoad>
-						Narci_PortraitPieces_OnLoad(self)
-					</OnLoad>
-				</Scripts>
-			</DressUpModel>
-		</Frames>
-	</Frame-->
-
-
 	<Button name="NarciWidgetButtonTemplate" virtual="true">
 		<Anchors>
 			<Anchor point="CENTER" x="0" y="0"/>
@@ -1182,7 +1098,7 @@
 					<OnHide method="OnHide"/>
 				</Scripts>
 			</Frame>
-			<Frame name="Narci_XmogNameFrame" parentKey="XmogNameFrame" Alpha="1" hidden="true" frameStrata="HIGH"  ignoreParentScale="true" scale="0.8">
+			<Frame name="Narci_XmogNameFrame" parentKey="XmogNameFrame" Alpha="1" hidden="true" frameStrata="HIGH" ignoreParentScale="true" scale="0.8">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="Narci_GuideLineFrame" relativePoint="TOPLEFT" x="20" y="-20"/>
 				</Anchors>
@@ -1223,8 +1139,8 @@
 							<Anchor point="CENTER" x="0" y="0"/>
 						</Anchors>
 						<Layers>
-							<Layer level="BACKGROUND" textureSubLevel="2">
-								<Texture hidden="false" file="Interface\AddOns\Narcissus\Art\BasicShapes\Hexagon" Alpha="0.8">
+							<Layer level="BACKGROUND" textureSubLevel="1">
+								<Texture hidden="true" file="Interface\AddOns\Narcissus\Art\BasicShapes\Hexagon" Alpha="0.8">
 									<Size x="80" y="80"/>
 									<Anchors>
 										<Anchor point="CENTER" relativeKey="$parent" x="0" y="0"/>
@@ -1241,6 +1157,31 @@
 								</Texture>
 							</Layer>
 						</Layers>
+					</Frame>
+					<Frame parentKey="TempPortraitFrame" frameLevel="1">
+						<Size x="72" y="72"/>
+						<Anchors>
+							<Anchor point="CENTER" relativeKey="$parent" relativePoint="CENTER"/>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND" textureSubLevel="2">
+								<Texture parentKey="PortraitTexture"/>
+								<MaskTexture parentKey="PortraitMask" file="Interface\AddOns\Narcissus\Art\Masks\HexagonMask" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE" setAllPoints="true">
+									<Size x="84" y="84"/>
+									<Anchors>
+										<Anchor point="CENTER" relativeKey="$parent" relativePoint="CENTER"/>
+									</Anchors>
+									<MaskedTextures>
+										<MaskedTexture childKey="PortraitTexture"/>
+									</MaskedTextures>
+								</MaskTexture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnShow>
+								SetPortraitTexture(self.PortraitTexture, "player");
+							</OnShow>
+						</Scripts>
 					</Frame>
 					<Frame frameLevel="3">
 						<Size x="102" y="102"/>
@@ -1259,86 +1200,31 @@
 							</Layer>
 						</Layers>
 					</Frame>
-					<Frame parentKey="C0" inherits="ModelPieceFrameTemplate">
-						<Size x="20" y="50"/>
-						<Anchors>
-							<Anchor point="BOTTOM" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="10"/>
-						</Anchors>
-					</Frame>
-					<Frame parentKey="C1" inherits="ModelPieceFrameTemplate">
-						<Size x="100" y="50"/>
-						<Anchors>
-							<Anchor point="BOTTOM" relativeKey="$parent.C0" relativePoint="TOP" x="0" y="-1"/>
-						</Anchors>
-					</Frame>
-					<Frame parentKey="L1" inherits="ModelPieceFrameTemplate">
-						<Size x="20" y="38"/>
-						<Anchors>
-							<Anchor point="BOTTOMRIGHT" relativeKey="$parent.C0" relativePoint="BOTTOMLEFT" x="0.5" y="12"/>
-						</Anchors>
-					</Frame>
-					<Frame parentKey="L2" inherits="ModelPieceFrameTemplate">
-						<Size x="8" y="34"/>
-						<Anchors>
-							<Anchor point="BOTTOMRIGHT" relativeKey="$parent.L1" relativePoint="BOTTOMLEFT" x="0.5" y="4"/>
-						</Anchors>
-					</Frame>
 
-					<Frame parentKey="R1" inherits="ModelPieceFrameTemplate">
-						<Size x="20" y="38"/>
-						<Anchors>
-							<Anchor point="BOTTOMLEFT" relativeKey="$parent.C0" relativePoint="BOTTOMRIGHT" x="-0.5" y="12"/>
-						</Anchors>
-					</Frame>
-					<Frame parentKey="R2" inherits="ModelPieceFrameTemplate">
-						<Size x="8" y="34"/>
-						<Anchors>
-							<Anchor point="BOTTOMLEFT" relativeKey="$parent.R1" relativePoint="BOTTOMRIGHT" x="-0.5" y="4"/>
-						</Anchors>
-					</Frame>
-
-					<EditBox parentKey="PlayerName" clipChildren="false" autoFocus="false" letters="24" multiLine="false" name="Narci_XmogNameEditbox" inherits="NarciEditBoxHideTooltipTemplate">
+					<EditBox parentKey="MogNameEditBox" clipChildren="false" autoFocus="false" letters="24" multiLine="false" inherits="NarciEditBoxTemplate">
 						<Size>
-							<AbsDimension x="400" y="24"/>
+							<AbsDimension x="386" y="24"/>
 						</Size>
 						<Anchors>
 							<Anchor point="BOTTOMLEFT" relativeKey="$parent.Background" relativePoint="BOTTOMLEFT" x="26" y="8"/>
 						</Anchors>
-						<FontString justifyH="LEFT" justifyV="BOTTOM"/>
+						<FontString inherits="NarciFontNormal10White" justifyH="LEFT" justifyV="BOTTOM"/>
 						<Scripts>
-							<OnLoad>
-								self.tooltipHeadline = "Name Your Set -PH"
-								self.tooltipLine1 = "Left-click to modify this text."
-							</OnLoad>
 							<OnEnter>
 								if self:GetParent():GetAlpha() ~= 1 then
 									return;
 								end
-								Narci_ShowButtonTooltip(self);
 								SetCursor("Interface/CURSOR/Cast.blp")
 							</OnEnter>
 							<OnTextChanged>
 								NarciAPI.SmartFontType(self)
 								local LetterNum = self:GetNumLetters()
-								local w = math.max(LetterNum*16, 180)
+								local w = math.max(LetterNum*16, 180);
 								self:GetParent().Background:SetWidth(w)
 							</OnTextChanged>
-							<OnEscapePressed>
-								self:ClearFocus();
-							</OnEscapePressed>
-							<OnEnterPressed>
-								self:ClearFocus();
-							</OnEnterPressed>
-							<OnLeave>
-								Narci:HideButtonTooltip();
-								SetCursor("Interface/CURSOR/Point.blp")
-							</OnLeave>
 						</Scripts>
 					</EditBox>
 				</Frames>
-				<Scripts>
-					<OnShow function="Narci_PortraitPieces_OnLoad"/>
-				</Scripts>
 			</Frame>
 
 			<Button inherits="NarciSlotButtonLeftTemplate" parentKey="ChestSlot" id="5">
@@ -1421,15 +1307,6 @@
 					<Anchor point="TOP" relativeKey="$parent.SecondaryHandSlot" relativePoint="BOTTOM"  x="0" y="-0" />
 				</Anchors>
 			</Button>
-
-			<!--Button inherits="NarciSlotButtonLeftTemplate" parentKey="AmmoSlot" id="0" hidden="true">
-				<KeyValues>
-					<KeyValue key="slotName" value="AmmoSlot" type="string"/>
-				</KeyValues>
-				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.RangedSlot" relativePoint="BOTTOM"  x="0" y="-0" />
-				</Anchors>
-			</Button-->
 
 			<Button parentKey="AmmoSlot" id="0" mixin="NarciItemButtonSharedMixin, NarciEquipmentSlotMixin" registerForClicks="LeftButtonUp, RightButtonUp" inherits="SecureActionButtonTemplate">
 				<KeyValues>

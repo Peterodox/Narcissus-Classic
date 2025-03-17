@@ -1,3 +1,5 @@
+local _, addon = ...
+
 local currentVersion = 0    --10000;
 local lastMajorVersion = 0;
 local _, _, _, tocversion = GetBuildInfo();
@@ -16,6 +18,7 @@ local sin = math.sin;
 local cos = math.cos;
 local pow = math.pow;
 local L = Narci.L;
+local GetMouseFocus = addon.API.GetMouseFocus;
 
 local function linear(t, b, e, d)
     return (e - b) * t / d + b
@@ -836,7 +839,7 @@ function NarciSplash_PreviewFadeIn_OnFinished(self)
                         After(0.5, function()
                             Preview.id = id;
                         end)
-                    end) 
+                    end)
                 end
             end
         end

@@ -1,3 +1,5 @@
+local _, addon = ...
+
 local BACKGROUND_INSET = 3.5;
 local TEXT_INSET = 16;
 local SPEECH_BALLOON_MIN_SIZE = 16;
@@ -41,6 +43,7 @@ local NarciAPI = NarciAPI;
 local FadeFrame = NarciFadeUI.Fade;
 local IsMouseButtonDown = IsMouseButtonDown;
 local After = C_Timer.After;
+
 
 local function round(a)
     if a then
@@ -1883,7 +1886,7 @@ function NarciTextOverlayTooltipMixin:OnLoad()
         frame.total = frame.total + elapsed;
         if frame.total >= frame.duration then
             frame:Hide();
-            if self.widget and self.widget == GetMouseFocus() then
+            if self.widget and self.widget:IsMouseMotionFocus() then
                 self:ShowTooltip(self.widget);
             end
         end
