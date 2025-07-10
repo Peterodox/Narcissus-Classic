@@ -14,6 +14,7 @@ local atan2 = math.atan2;
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded;
 
 local GetMouseFocus = addon.API.GetMouseFocus;
+local EXPANSION_ID = addon.expansionID;
 
 local MiniButton;
 
@@ -593,7 +594,7 @@ function NarciMinimapButtonMixin:OnEnter()
 		if self.useMouseoverMenu then
 			self.onEnterDelay:Show();
 		else
-			self:ShowTooltip();
+			self:ShowSimpleTooltip();
 		end
 	end
 end
@@ -722,6 +723,11 @@ end
 function NarciMinimapButtonMixin:UpdateManager()
 	--If the button is collected by other addons
 	--We don't show the menu on mouseover, instead prompt user to use right-click to open the menu
+	if EXPANSION_ID < 4 then
+		self.useMouseoverMenu = false;
+		return
+	end
+
 	local useMouseoverMenu;
 	local parent = self:GetParent();
 	if parent == Narci_MinimapButtonContainer or parent == Minimap then

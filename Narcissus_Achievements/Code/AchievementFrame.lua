@@ -482,6 +482,11 @@ local function ProcessModifiedClick(button)
             if IsModifiedClick("QUESTWATCHTOGGLE") and not IsAltKeyDown() then
                 local isTracking = ToggleTracking(achievementID);
                 button.trackIcon:SetShown(isTracking);
+
+                if WatchFrame_Update and (not InCombatLockdown()) then
+                    --This is not event-driven in Classic
+                    WatchFrame_Update();
+                end
             end
             if IsAltKeyDown() then
                 BookmarkUtil:ToggleBookmark(achievementID);
