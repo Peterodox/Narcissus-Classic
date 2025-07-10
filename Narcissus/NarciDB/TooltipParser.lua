@@ -98,6 +98,13 @@ local PATTERN_ITEM_SET_NAME = "(.+) %((%d+)/(%d+)%)";   --Pattern_WrapNumber( Pa
 local PATTERN_CLASS_REQUIREMENT = Pattern_WrapSpace(ITEM_CLASSES_ALLOWED);
 local PATTERN_AMMO_DPS = gsub(AMMO_DAMAGE_TEMPLATE, "%%s", "([%%d.]+)");
 
+
+local ENCHANT_TOOLTIP_LINE_INDEX = 5;
+if addon.expansionID >= 4 then
+    ENCHANT_TOOLTIP_LINE_INDEX = 6;
+end
+
+
 do
     if TEXT_LOCALE == "zhCN" then
         LEFT_BRACE = "（";
@@ -165,10 +172,6 @@ local IS_LINE_HOOKED = {};
 
 local pinnedObjects, lastItem, lastText, onTextChangedCallback;
 
-local function OnTextChanged(object, text)
-    print(object.lineIndex);
-    print(text);
-end
 
 local function SetTooltipItem(item)
     if not item then return end;
@@ -362,7 +365,7 @@ local function GetItemEnchantText(itemLink, colorized)
     local str;
     local enchantText;
     local enchantFormat = ITEM_ENCHANT_FORMAT;
-    for i = 5, numLines do
+    for i = ENCHANT_TOOLTIP_LINE_INDEX, numLines do
         str = _G["NarciVirtualTooltip".."TextLeft"..i];
         if str then
             str = str:GetText();
@@ -397,20 +400,21 @@ NarciAPI.GetEnchantTextByEnchantID = GetEnchantTextByEnchantID;
 local function GetEnchantTextByItemLink(itemLink, colorized)
     if not itemLink then return end;
 
-    local _, _, _, linkType, linkID, enchantID = split(":|H", itemLink);
+    local itemID, enchantID = match(itemLink, "item:(%d+):(%d+)");
 
     if enchantID and enchantID ~= "" then
         local link = "item:2092:"..enchantID;
 
         TP:SetOwner(UIParent, "ANCHOR_PRESERVE");
         TP:SetHyperlink(link);
+        --print(string.format("|H%s|h[Test Item]|h",link))
 
-        if not LEFT_FONT_STRINGS[5] then
-            LEFT_FONT_STRINGS[5] = _G["NarciVirtualTooltipTextLeft5"];
+        if not LEFT_FONT_STRINGS[ENCHANT_TOOLTIP_LINE_INDEX] then
+            LEFT_FONT_STRINGS[ENCHANT_TOOLTIP_LINE_INDEX] = _G["NarciVirtualTooltipTextLeft"..ENCHANT_TOOLTIP_LINE_INDEX];
         end
 
-        if LEFT_FONT_STRINGS[5] then
-            local enchantText = LEFT_FONT_STRINGS[5]:GetText();
+        if LEFT_FONT_STRINGS[ENCHANT_TOOLTIP_LINE_INDEX] then
+            local enchantText = LEFT_FONT_STRINGS[ENCHANT_TOOLTIP_LINE_INDEX]:GetText();
 
             if enchantText and enchantText ~= "" then
                 if colorized then
@@ -837,7 +841,9 @@ local function GetCompleteItemData(itemLink)
                 gemEffect = fontString:GetText();
                 gemEffect = RemoveColorString(gemEffect);
                 lineIndex = tonumber(match(fontString:GetName(), "Left(%d+)$"));
-                processed[lineIndex] = true;
+                if lineIndex then
+                    processed[lineIndex] = true;
+                end
                 if lineIndex and not LEFT_FONT_STRINGS[lineIndex] then
                     LEFT_FONT_STRINGS[lineIndex] = fontString;
                 end

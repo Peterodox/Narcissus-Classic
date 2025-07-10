@@ -1,4 +1,4 @@
-## Interface: 11507
+## Interface: 50500
 ## Version: 1.2.6
 
 ## Title: Narcissus
@@ -73,8 +73,11 @@ Modules\AR\AR.xml
 Modules\Splash\Splash.xml
 
 Modules\Statistics\Core.lua
+Modules\Achievement\Core.xml
 
 Filters\CameraEffect.xml
 Filters\Letterbox.xml
 
 Guide\Guide.xml
+
+Modules\Wardrobe\Wardrobe.lua

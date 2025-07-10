@@ -18,8 +18,7 @@ local isCustomCategory = {
 local bossData = {};
 
 local function IsBossCard(achievementID)
-    --Disabled in WoW Classic
-    return false    --isBossCard[achievementID]
+    return isBossCard[achievementID]
 end
 
 local function GetBossData(achievementID)
@@ -736,8 +735,8 @@ list[14823] = {
     { {4821, 4820, 4822, 4823}, 54, 461145},   --Halion Ruby Sanctum
 };
 
+--if true then return end;
 
---[[
 for categoryID, subList in pairs(list) do
     isCustomCategory[categoryID] = true;
     local id ;
@@ -749,10 +748,8 @@ for categoryID, subList in pairs(list) do
         end
     end
 end
---]]
 
-
----- Narcissus Custom Statistics ----
+--Narcissus Custom Statistics
 local S = Narci.L.S;
 
 local function SecondsToTime(seconds)
@@ -792,6 +789,19 @@ local function GetScreenshotsTaken()
     return NarciStatisticsDB.ScreenshotsTakenInNarcissus or 0;
 end
 
+local function GetQuestReading()
+    if NarciStatisticsDB.SLQuestReadingTime then
+        local locale, numQuests, numWords, timeReading, speed = unpack(NarciStatisticsDB.SLQuestReadingTime);
+        if locale then
+            local f = S["Quest Text Reading Speed Format"];
+            return string.format(f, numQuests, numWords, timeReading, speed);
+        else
+            return NONE;
+        end
+    else
+        return NONE;
+    end
+end
 
 local customStatData = {
     [12080001] = {
@@ -805,7 +815,7 @@ local customStatData = {
         name = S["Screenshots"],
         valueFunc = GetScreenshotsTaken,
     },
-}
+};
 
 list[12080000] = {
     12080001,

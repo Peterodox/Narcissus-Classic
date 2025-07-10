@@ -33,7 +33,6 @@ local HIGHLIGHT_FONT_COLOR = HIGHLIGHT_FONT_COLOR;
 local NORMAL_FONT_COLOR = NORMAL_FONT_COLOR;
 local CLASS_COLORS_MAGE = RAID_CLASS_COLORS["MAGE"];
 
-local RANGE_WEAPON_EQUIPPED = false;
 local PLAYER_CLASS = "HUNTER";
 
 do
@@ -47,6 +46,10 @@ end
 
 local function FormatPercentage(value)
 	return format("%.2f", value).."%"
+end
+
+local function Round2(value)
+	return floor(value * 100) * 0.01
 end
 
 local ComputePetBonus = ComputePetBonus or ReturnZero;
@@ -71,6 +74,7 @@ local CR_CRIT_MELEE = CR_CRIT_MELEE or 9;
 local CR_CRIT_RANGED = CR_CRIT_RANGED or 10;
 local CR_CRIT_SPELL = CR_CRIT_SPELL or 11;
 local CR_RESILIENCE_CRIT_TAKEN = CR_RESILIENCE_CRIT_TAKEN or 15;
+local COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN = COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN or 16;
 local CR_HASTE_MELEE = CR_HASTE_MELEE or 18;
 local CR_HASTE_RANGED = CR_HASTE_RANGED or 19;
 local CR_HASTE_SPELL = CR_HASTE_SPELL or 20;
@@ -198,45 +202,45 @@ end
 local GetHitTooltipText = GetHitTooltip_PreWrath;
 
 
-local function PaperDollFrame_SetRating(statFrame, ratingIndex)
+local function PaperDollFrame_SetRating(object, ratingIndex)
 	--Derivative of the global function with same name
 	local statName = _G["COMBAT_RATING_NAME"..ratingIndex];
 	local rating = GetCombatRating(ratingIndex);
 	local ratingBonus = GetCombatRatingBonus(ratingIndex);
 
-	statFrame:SetLabelAndValue(statName, rating, (rating and rating == 0));
+	object:SetLabelAndValue(statName, rating, (rating and rating == 0));
 
-	statFrame.tooltip = HIGHLIGHT_FONT_COLOR_CODE..statName.." "..rating..FONT_COLOR_CODE_CLOSE;
+	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..statName.." "..rating..FONT_COLOR_CODE_CLOSE;
 
 	if ( ratingIndex == CR_HIT_MELEE ) then
-		statFrame.tooltip2 = GetHitTooltipText(1, ratingBonus);
+		object.tooltip2 = GetHitTooltipText(1, ratingBonus);
 	elseif ( ratingIndex == CR_HIT_RANGED ) then
-		statFrame.tooltip2 = GetHitTooltipText(2, ratingBonus);
+		object.tooltip2 = GetHitTooltipText(2, ratingBonus);
 	elseif ( ratingIndex == CR_DODGE ) then
-		statFrame.tooltip2 = format(CR_DODGE_TOOLTIP, ratingBonus);
+		object.tooltip2 = format(CR_DODGE_TOOLTIP, ratingBonus);
 	elseif ( ratingIndex == CR_PARRY ) then
-		statFrame.tooltip2 = format(CR_PARRY_TOOLTIP, ratingBonus);
+		object.tooltip2 = format(CR_PARRY_TOOLTIP, ratingBonus);
 	elseif ( ratingIndex == CR_BLOCK ) then
-		statFrame.tooltip2 = format(CR_PARRY_TOOLTIP, ratingBonus);
+		object.tooltip2 = format(CR_PARRY_TOOLTIP, ratingBonus);
 	elseif ( ratingIndex == CR_HIT_SPELL ) then
-		statFrame.tooltip2 = format(CR_HIT_SPELL_TOOLTIP, UnitLevel("player"), ratingBonus, GetSpellPenetration(), GetSpellPenetration());
+		object.tooltip2 = format(CR_HIT_SPELL_TOOLTIP, UnitLevel("player"), ratingBonus, GetSpellPenetration(), GetSpellPenetration());
 	elseif ( ratingIndex == CR_CRIT_SPELL ) then
 		local holySchool = 2;
 		local minCrit = GetSpellCritChance(holySchool);
-		statFrame.spellCrit = {};
-		statFrame.spellCrit[holySchool] = minCrit;
+		object.spellCrit = {};
+		object.spellCrit[holySchool] = minCrit;
 		local spellCrit;
 		for i=(holySchool+1), MAX_SPELL_SCHOOLS do
 			spellCrit = GetSpellCritChance(i);
 			minCrit = min(minCrit, spellCrit);
-			statFrame.spellCrit[i] = spellCrit;
+			object.spellCrit[i] = spellCrit;
 		end
 		minCrit = format("%.2f%%", minCrit);
-		statFrame.minCrit = minCrit;
+		object.minCrit = minCrit;
 	elseif ( ratingIndex == CR_EXPERTISE ) then
-		statFrame.tooltip2 = format(CR_EXPERTISE_TOOLTIP, ratingBonus);
+		object.tooltip2 = format(CR_EXPERTISE_TOOLTIP, ratingBonus);
 	else
-		statFrame.tooltip2 = HIGHLIGHT_FONT_COLOR_CODE..statName.." "..rating;
+		object.tooltip2 = HIGHLIGHT_FONT_COLOR_CODE..statName.." "..rating;
 	end
 end
 
@@ -568,6 +572,8 @@ function UpdateFunc.Expertise(object)
 	local expertise, offhandExpertise = GetExpertise();
 	local speed, offhandSpeed = UnitAttackSpeed("player");
 	local text;
+	expertise = Round2(expertise);
+	offhandExpertise = Round2(offhandExpertise);
 	if( offhandSpeed ) then
 		text = expertise.." / "..offhandExpertise;
 	else
@@ -591,15 +597,10 @@ end
 ---- Stat Ranged ----
 function UpdateFunc.RangedDamage(object)
 	-- If no ranged attack then set to n/a
-	local hasRelic = UnitHasRelicSlot("player");
-	local rangedTexture = GetInventoryItemTexture("player", 18);
 
 	object:SetScript("OnEnter", CharacterDamageFrame_OnEnter);
 
-	if ( rangedTexture and not hasRelic ) then
-		RANGE_WEAPON_EQUIPPED = true;
-	else
-		RANGE_WEAPON_EQUIPPED = false;
+	if not NarciClassicAPI.IsRangedWeaponEquipped() then
 		object.damage = nil;
 		object:SetLabelAndValue(DAMAGE, NOT_APPLICABLE, true);
 		return
@@ -629,7 +630,6 @@ function UpdateFunc.RangedDamage(object)
 		fullDamage = (baseDamage + physicalBonusPos + physicalBonusNeg) * percent;
 		totalBonus = (fullDamage - baseDamage);
 		if (rangedAttackSpeed == 0) then
-		-- Egan's Blaster!!! --WHAT?
 			damagePerSecond = math.huge;
 		else
 			damagePerSecond = (max(fullDamage,1) / rangedAttackSpeed);
@@ -675,7 +675,7 @@ function UpdateFunc.RangedDamage(object)
 end
 
 function UpdateFunc.RangedAttackSpeed(object)
-	if RANGE_WEAPON_EQUIPPED then
+	if NarciClassicAPI.IsRangedWeaponEquipped() then
 		local text = UnitRangedDamage("player");
 		text = format("%.2f", text);
 		object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..ATTACK_SPEED.." "..text..FONT_COLOR_CODE_CLOSE;
@@ -697,12 +697,12 @@ function UpdateFunc.RangedAttackPower(object)
 	object.tooltip2 = format(RANGED_ATTACK_POWER_TOOLTIP, max((totalAP), 0)/ATTACK_POWER_MAGIC_NUMBER);
 	local petAPBonus = ComputePetBonus( "PET_BONUS_RAP_TO_AP", totalAP );
 	if( petAPBonus > 0 ) then
-		object.tooltip2 = object.tooltip2 .. "\n" .. format(PET_BONUS_TOOLTIP_RANGED_ATTACK_POWER, math.floor(petAPBonus));
+		object.tooltip2 = object.tooltip2 .. "\n" .. format(PET_BONUS_TOOLTIP_RANGED_ATTACK_POWER, floor(petAPBonus));
 	end
 
 	local petSpellDmgBonus = ComputePetBonus( "PET_BONUS_RAP_TO_SPELLDMG", totalAP );
 	if( petSpellDmgBonus > 0 ) then
-		object.tooltip2 = object.tooltip2 .. "\n" .. format(PET_BONUS_TOOLTIP_SPELLDAMAGE, math.floor(petSpellDmgBonus));
+		object.tooltip2 = object.tooltip2 .. "\n" .. format(PET_BONUS_TOOLTIP_SPELLDAMAGE, floor(petSpellDmgBonus));
 	end
 end
 
@@ -915,6 +915,39 @@ function UpdateFunc.Resilience(object)
 	object:SetLabelAndValue(STAT_RESILIENCE, resilience, resilience == 0);
 	object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..STAT_RESILIENCE.." "..resilience..FONT_COLOR_CODE_CLOSE;
 	object.tooltip2 = format(RESILIENCE_TOOLTIP, bonus, min(bonus * 2, 25.00), bonus);
+
+	local resilienceRating = GetCombatRating(COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN);
+	local resilienceRatingText = BreakUpLargeNumbers(resilienceRating);
+	local ratingBonus = GetCombatRatingBonus(COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN);
+	if ClassicExpansionAtLeast(LE_EXPANSION_MISTS_OF_PANDARIA) then
+		local damageReduction = ratingBonus + GetModResilienceDamageReduction();
+		resilienceRatingText = FormatPercentage(damageReduction);
+		object:SetLabelAndValue(STAT_RESILIENCE, resilienceRatingText, damageReduction == 0);
+		object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_RESILIENCE).." "..resilienceRatingText..FONT_COLOR_CODE_CLOSE;
+		object.tooltip2 = RESILIENCE_TOOLTIP .. format(STAT_RESILIENCE_BASE_TOOLTIP, resilienceRating, ratingBonus);
+	else
+		object:SetLabelAndValue(STAT_RESILIENCE, resilience, resilience == 0);
+		object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_RESILIENCE).." "..resilienceRatingText..FONT_COLOR_CODE_CLOSE;	
+		object.tooltip2 = format(RESILIENCE_TOOLTIP, ratingBonus);
+	end
+end
+
+function UpdateFunc.PvpPower(object)
+	local pvpPower = GetCombatRating(CR_PVP_POWER or 27);
+	local pvpDamage = GetPvpPowerDamage();
+	local pvpHealing = GetPvpPowerHealing();
+
+	if (pvpHealing > pvpDamage) then
+		object:SetLabelAndValue(STAT_RESILIENCE, pvpHealing, pvpPower == 0);
+		object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_PVP_POWER).." "..
+			format("%.2F%%", pvpHealing).." ("..SHOW_COMBAT_HEALING_TEXT..")"..FONT_COLOR_CODE_CLOSE;
+		object.tooltip2 = PVP_POWER_TOOLTIP .. format(PVP_POWER_HEALING_TOOLTIP, pvpPower, pvpHealing, pvpDamage);
+	else
+		object:SetLabelAndValue(STAT_RESILIENCE, pvpDamage, pvpPower == 0);
+		object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_PVP_POWER).." "..
+			format("%.2F%%", pvpDamage).." ("..DAMAGE..")"..FONT_COLOR_CODE_CLOSE;
+		object.tooltip2 = PVP_POWER_TOOLTIP .. format(PVP_POWER_DAMAGE_TOOLTIP, pvpPower, pvpDamage, pvpHealing);
+	end
 end
 
 
@@ -1147,25 +1180,26 @@ local function Mastery_OnEnter(object)
 	DefaultTooltip:SetOwner(object, "ANCHOR_NONE");
 
 	local _, class = UnitClass("player");
-	local mastery = GetMastery();
-	local masteryBonus = GetCombatRatingBonus(CR_MASTERY);
-	local title = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_MASTERY).." "..format("%.2F", mastery)..FONT_COLOR_CODE_CLOSE;
+	local mastery, bonusCoeff = GetMasteryEffect();
+	local masteryBonus = GetCombatRatingBonus(CR_MASTERY) * bonusCoeff;
+	local title = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_MASTERY).." "..format("%.2F%%", mastery)..FONT_COLOR_CODE_CLOSE;
 	if (masteryBonus > 0) then
-		title = title..HIGHLIGHT_FONT_COLOR_CODE.." ("..format("%.2F", mastery-masteryBonus)..FONT_COLOR_CODE_CLOSE..GREEN_FONT_COLOR_CODE.."+"..format("%.2F", masteryBonus)..FONT_COLOR_CODE_CLOSE..HIGHLIGHT_FONT_COLOR_CODE..")";
+		title = title..HIGHLIGHT_FONT_COLOR_CODE.." ("..format("%.2F%%", mastery-masteryBonus)..FONT_COLOR_CODE_CLOSE..GREEN_FONT_COLOR_CODE.."+"..format("%.2F%%", masteryBonus)..FONT_COLOR_CODE_CLOSE..HIGHLIGHT_FONT_COLOR_CODE..")";
 	end
 
 	DefaultTooltip:SetText(title);
 
-	local masteryKnown = IsSpellKnown(CLASS_MASTERY_SPELLS[class]);
-	local primaryTalentTree = GetPrimaryTalentTree();
+	local masteryKnown = true;
+	local primaryTalentTree = C_SpecializationInfo.GetSpecialization();
 	if (masteryKnown and primaryTalentTree) then
-		local masterySpell, masterySpell2 = GetTalentTreeMasterySpells(primaryTalentTree);
-		if (masterySpell) then
+		local masterySpells = C_SpecializationInfo.GetSpecializationMasterySpells(primaryTalentTree);
+		local hasAddedAnyMasterySpell = false;
+		for i, masterySpell in ipairs(masterySpells) do
+			if hasAddedAnyMasterySpell then
+				DefaultTooltip:AddLine(" ");
+			end
 			DefaultTooltip:AddSpellByID(masterySpell);
-		end
-		if (masterySpell2) then
-			DefaultTooltip:AddLine(" ");
-			DefaultTooltip:AddSpellByID(masterySpell2);
+			hasAddedAnyMasterySpell = true;
 		end
 		DefaultTooltip:AddLine(" ");
 		DefaultTooltip:AddLine(format(STAT_MASTERY_TOOLTIP, GetCombatRating(CR_MASTERY), masteryBonus), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
@@ -1185,8 +1219,8 @@ end
 
 function UpdateFunc.Mastery(object)
 	local labelText = STAT_MASTERY;
-	local mastery = GetMastery();
-	mastery = format("%.2F", mastery);
+	local mastery = GetMasteryEffect();
+	mastery = format("%.2F%%", mastery);
 	object:SetLabelAndValue(labelText, mastery);
 	object:SetScript("OnEnter", Mastery_OnEnter);
 end
@@ -1338,10 +1372,11 @@ do
 		};
 	elseif expansionID == 3 then
 		GetHitTooltipText = GetHitTooltip_Wrath;
-	elseif expansionID == 4 then
+	elseif expansionID >= 4 then
 		table.insert(LAYOUTS.melee, "Mastery");
 		table.insert(LAYOUTS.ranged, "Mastery");
 		table.insert(LAYOUTS.spell, "Mastery");
+		LAYOUTS.defense = {"Reduction", "Dodge", "Parry", "Block", "Resilience", "PvpPower"};
     end
 end
 

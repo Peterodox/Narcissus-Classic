@@ -931,7 +931,7 @@
 		</Scripts>
 		<Animations>
 			<AnimationGroup parentKey="animOut">
-				<Translation smoothing="IN" offsetX="120" duration="0.6" order="1"/>
+				<Translation smoothing="IN" offsetX="120" duration="0.6" order="1" parentKey="a1"/>
 			</AnimationGroup>
 		</Animations>
 	</Button>

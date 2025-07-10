@@ -5,15 +5,11 @@ local GetInventoryItemID = GetInventoryItemID;
 local GetItemInfoInstant = API.GetItemInfoInstant;
 local GetItemCount = API.GetItemCount;
 
-local EXPANSION_ID;
+local EXPANSION_ID = addon.expansionID;
 local PLAYER_ARMOR_TYPE = 1;	--1-4  Cloth-Leather-Mail-Plate
 local PLAYER_ARMOR_TYPE_NAME = "Cloth";
 
 do
-	local _, _, _, tocVersion = GetBuildInfo();
-	EXPANSION_ID = math.floor(tonumber(tocVersion) / 10000);
-	addon.expansionID = EXPANSION_ID;
-
 	local className, clssFileName, classID = UnitClass("player");
 	local armorItemID;
 
@@ -328,8 +324,14 @@ end
 NarciClassicAPI.GetOwnedAmmo = GetOwnedAmmo;
 
 
+
+--C_PaperDollInfo.IsRangedSlotShown()
 if EXPANSION_ID >= 4 then
 	function NarciClassicAPI.DoesRangedWeaponRequireAmmo()
+		return false
+	end
+
+	function NarciClassicAPI.IsRangedSlotShown()
 		return false
 	end
 else
@@ -338,6 +340,10 @@ else
 		if not rangedItemID then return end;
 		local _, _, _, _, _, _, subclassID = GetItemInfoInstant(rangedItemID);
 		return subclassID == 2 or subclassID == 3 or subclassID == 18
+	end
+
+	function NarciClassicAPI.IsRangedSlotShown()
+		return true
 	end
 end
 
@@ -500,9 +506,8 @@ function NarciClassicAPI.SetCameraTarget(model, x, y, z)
 end
 
 
-do
+do	--Talent, Specialization
 	local GetTalentTabInfo = GetTalentTabInfo;
-	local GetTalentTabNameAndPoints;
 	local IsPlayerInAlteredForm = IsPlayerInAlteredForm;
 
 	if not IsPlayerInAlteredForm then
@@ -512,17 +517,45 @@ do
 	end
 
 	if EXPANSION_ID >= 4 then
-		function GetTalentTabNameAndPoints(index)
-			local name, _, pointsSpent = GetTalentTabInfo(index);
-			return name, pointsSpent
+		function NarciClassicAPI.GetCurrentSpecName()
+			local _, currentSpecName;
+			local specIndex = C_SpecializationInfo.GetSpecialization();
+			if specIndex then
+				_, currentSpecName = C_SpecializationInfo.GetSpecializationInfo(specIndex);
+				if currentSpecName ~= "" then
+					return currentSpecName
+				end
+			end
+		end
+
+		function NarciClassicAPI.IsRangedWeaponEquipped()
+			local itemID = GetInventoryItemID("player", 16);
+			if itemID then
+				local _, _, _, _, _, classID, subclassID = GetItemInfoInstant(itemID);
+				if classID == 2 and (subclassID == 2 or subclassID == 3 or subclassID == 16 or subclassID == 18 or subclassID == 19) then
+					return true
+				end
+			end
+			return false
 		end
 	else
-		function GetTalentTabNameAndPoints(index)
-			local name, _, pointsSpent = GetTalentTabInfo(index);
-			return name, pointsSpent
+		function NarciClassicAPI.GetCurrentSpecName()
+			local _, currentSpecName, talentTabName, pointsSpent;
+			local maxPoints = 0;
+			for i = 1, GetNumTalentTabs() do
+				_, talentTabName, _, _, pointsSpent = GetTalentTabInfo(i);
+				if pointsSpent and pointsSpent > maxPoints then
+					maxPoints = pointsSpent;
+					currentSpecName = talentTabName;
+				end
+			end
+			return currentSpecName
+		end
+
+		function NarciClassicAPI.IsRangedWeaponEquipped()
+			return GetInventoryItemID("player", 18) ~= nil
 		end
 	end
-	NarciClassicAPI.GetTalentTabNameAndPoints = GetTalentTabNameAndPoints;
 end
 
 do

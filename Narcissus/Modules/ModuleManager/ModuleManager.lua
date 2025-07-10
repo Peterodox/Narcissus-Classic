@@ -21,7 +21,7 @@ Manager:SetScript("OnEvent", function(self, event, ...)
         for i = 1, #EventToAddOn[event] do
             local name = EventToAddOn[event][i];
             --EnableAddOn(name);    --Forced Enable
-            local loaded, reason = LoadAddOn(name);
+            local loaded, reason = C_AddOns.LoadAddOn(name);
             if loaded then
                 self:UnregisterEvent(event);
             end
@@ -30,7 +30,7 @@ Manager:SetScript("OnEvent", function(self, event, ...)
 
     if event == "PLAYER_ENTERING_WORLD" then
         if C_GamePad and C_GamePad.IsEnabled() then
-            LoadAddOn("Narcissus_GamePad");
+            C_AddOns.LoadAddOn("Narcissus_GamePad");
             self:RegisterEvent("GAME_PAD_CONNECTED");
             self:OnGamePadConnected();
         end

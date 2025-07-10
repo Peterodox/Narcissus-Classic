@@ -110,11 +110,17 @@ function NarciFrameBorderMixin:OnEnter()
     if not self:IsHighlightLocked() then
         self:SetBackdropBorderColor(0.5, 0.5, 0.5, 1);
     end
+    if self.onMouseMotion then
+        self.onMouseMotion(self, true);
+    end
 end
 
 function NarciFrameBorderMixin:OnLeave()
     if not self:IsHighlightLocked() then
         self:SetBorderColor(unpack(self.borderColor));
+    end
+    if self.onMouseMotion then
+        self.onMouseMotion(self, false);
     end
 end
 
@@ -150,5 +156,60 @@ function NarciFrameCloseButtonMixin:OnClick()
         parentName:Close();
     else
         parentName:Hide();
+    end
+end
+
+
+
+
+NarciChamferedFrameMixin = {};
+
+function NarciChamferedFrameMixin:CreateBackground()
+    if not self.BorderFrame then
+        self.BorderFrame = CreateFrame("Frame", nil, self);
+        self.BorderFrame:SetAllPoints(true);
+        NarciAPI.NineSliceUtil.SetUpBorder(self.BorderFrame, "genericChamferedBorder", nil, 0.25, 0.25, 0.25, 1, 7);
+    end
+
+    if not self.BackgroundFrame then
+        self.BackgroundFrame = CreateFrame("Frame", nil, self);
+        self.BackgroundFrame:SetAllPoints(true);
+        self.BackgroundFrame:SetFrameLevel(self:GetFrameLevel());
+        NarciAPI.NineSliceUtil.SetUpBackdrop(self.BackgroundFrame, "genericChamferedBackground", nil, 0, 0, 0, 1, -8);
+    end
+end
+
+function NarciChamferedFrameMixin:SetBackgroundColor(r, g, b, a)
+    if not self.BackgroundFrame then
+        self:CreateBackground();
+    end
+    NarciAPI.NineSliceUtil.SetBackdropColor(self.BackgroundFrame, r, g, b, a);
+end
+
+function NarciChamferedFrameMixin:SetBorderColor(r, g, b, a)
+    if not self.BorderFrame then
+        self:CreateBackground();
+    end
+    NarciAPI.NineSliceUtil.SetBorderColor(self.BorderFrame, r, g, b, a);
+end
+
+function NarciChamferedFrameMixin:SetBorderOffset(value)
+    --positive value expand the frame background
+    self:CreateBackground();
+    NarciAPI.NineSliceUtil.SetUpBorder(self.BorderFrame, "genericChamferedBorder", -value);
+    NarciAPI.NineSliceUtil.SetUpBackdrop(self.BackgroundFrame, "genericChamferedBackground", -value);
+end
+
+function NarciChamferedFrameMixin:Toggle()
+    self:SetShown(not self:IsShown());
+end
+
+function NarciChamferedFrameMixin:HideWhenParentIsHidden(state)
+    if state then
+        self:SetScript("OnHide", function()
+            self:Hide()
+        end);
+    else
+        self:SetScript("OnHide", nil);
     end
 end

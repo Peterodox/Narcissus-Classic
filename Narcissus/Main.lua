@@ -1747,6 +1747,11 @@ end
 
 function NarciEquipmentSlotMixin:OnLoad()
 	local slotName = self.slotName;
+	if slotName == "RangedSlot" then
+		if not NarciClassicAPI.IsRangedSlotShown() then
+			return
+		end
+	end
 	local slotID, textureName = GetInventorySlotInfo(slotName);
 	self.emptyTexture = textureName;
 	self:SetID(slotID);
@@ -2029,20 +2034,9 @@ local function UpdateCharacterInfoFrame(newLevel)
 
 	local className, englishClass = UnitClass("player");
 	local _, _, _, rgbHex = GetClassColor(englishClass);
-
-	local currentSpecName, talentTabName, pointsSpent;
-	local maxPoints = 0;
-
-	for i = 1, GetNumTalentTabs() do
-		talentTabName, _, pointsSpent = NarciClassicAPI.GetTalentTabNameAndPoints(i);
-		if pointsSpent and pointsSpent > maxPoints then
-			maxPoints = pointsSpent;
-			currentSpecName = talentTabName;
-		end
-	end
-
 	local frame = Narci_PlayerInfoFrame;
 
+	local currentSpecName = NarciClassicAPI.GetCurrentSpecName();
 	if currentSpecName then
 		className = currentSpecName.." "..className;
 	end
@@ -2087,10 +2081,46 @@ SlotController.updateFrame:SetScript("OnUpdate", function(f, elapsed)
 	end
 end);
 
-SlotController.refreshSequence = {
-	1, 2, 3, 15, 5, 9, 16, 17, 18, 0,
-	10, 6, 7, 8, 11, 12, 13, 14, 4, 19,
-};
+
+local RepositionSlotButtons;
+if NarciClassicAPI.IsRangedSlotShown() then
+	SlotController.refreshSequence = {
+		1, 2, 3, 15, 5, 9, 16, 17, 18, 0,
+		10, 6, 7, 8, 11, 12, 13, 14, 4, 19,
+	};
+else
+	SlotController.refreshSequence = {
+		1, 2, 3, 15, 5, 9, 16, 17,
+		10, 6, 7, 8, 11, 12, 13, 14, 4, 19,
+	};
+
+	local function _RepositionSlotButtons()
+		local Narci_Character = Narci_Character;
+		local f1 = Narci_Character.Finger0Slot;
+		local f2 = Narci_Character.TabardSlot;
+		local f3 = Narci_Character.ShirtSlot;
+		local f4 = Narci_Character.RangedSlot;
+		f1:ClearAllPoints();
+		f2:ClearAllPoints();
+		f3:ClearAllPoints();
+		f4:ClearAllPoints();
+		f1:SetPoint("CENTER", Narci_VirtualLineRight, "CENTER", 0, 0);
+		f2:SetPoint("TOP", Narci_Character.Trinket1Slot, "BOTTOM", 0, 0);
+		f3:SetPoint("TOP", Narci_Character.SecondaryHandSlot, "BOTTOM", 0, 0);
+		f3.animOut.a1:SetOffset(-120, 0);
+		f4:Hide();
+	end
+
+	C_Timer.After(0, function()
+		if not InCombatLockdown() then
+			_RepositionSlotButtons();
+			_RepositionSlotButtons = nil;
+		else
+			RepositionSlotButtons = _RepositionSlotButtons;
+		end
+	end);
+end
+
 
 SlotController.tempEnchantSequence = {};
 
@@ -2118,6 +2148,11 @@ function SlotController:StopRefresh()
 end
 
 function SlotController:LazyRefresh(sequenceName)
+	if RepositionSlotButtons then
+		RepositionSlotButtons();
+		RepositionSlotButtons = nil;
+	end
+
 	local f = self.updateFrame;
 	f:Hide();
 	f.t = 0;
@@ -3240,6 +3275,9 @@ EL:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE");
 EL:RegisterEvent("CHARACTER_POINTS_CHANGED");
 EL:RegisterEvent("PLAYER_LEVEL_CHANGED");
 
+if C_EventUtils.IsEventValid("ACTIVE_TALENT_GROUP_CHANGED") then
+	EL:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
+end
 
 EL:SetScript("OnEvent",function(self, event, ...)
 	--print(event)
@@ -3280,7 +3318,7 @@ EL:SetScript("OnEvent",function(self, event, ...)
 
 		EngravingSlotUtil:InitializeEngravingSystem();
 
-		if IsAddOnLoaded("DynamicCam") then
+		if C_AddOns.IsAddOnLoaded("DynamicCam") then
 			CVarTemp.isDynamicCamLoaded = true;
 			
 			--Check validity
@@ -3346,7 +3384,7 @@ EL:SetScript("OnEvent",function(self, event, ...)
 			UpdateCharacterInfoFrame();
 		end
 
-	elseif event == "CHARACTER_POINTS_CHANGED" then
+	elseif event == "CHARACTER_POINTS_CHANGED" or event == "ACTIVE_TALENT_GROUP_CHANGED" then
 		if not self.updatingTalent then
 			self.updatingTalent = true;
 			C_Timer.After(0.1, function()
@@ -3703,7 +3741,7 @@ do
 		else
 			maxLines = 2;
 		end
-		
+
 		for id, slotButton in pairs(SLOT_TABLE) do
 			slotButton.Name:SetMaxLines(maxLines);
 			slotButton.ItemLevel:SetMaxLines(maxLines);

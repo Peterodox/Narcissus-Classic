@@ -464,7 +464,7 @@ L["Visibility"] = "Visibility";
 
 --Achievement Frame--
 L["Use Achievement Panel"] = "Use As Primary Achievement Panel";
-L["Use Achievement Panel Description"] = "Replace the default achievement toast. Enable tooltip enhancement. Click tracked achievements to open this panel.";
+L["Use Achievement Panel Description"] = "Click toasts or tracked achievements to open this panel.";
 L["Incomplete First"] = "Incomplete First";
 L["Earned First"] = "Earned First";
 L["Settings"] = "Settings";
@@ -476,6 +476,24 @@ L["Show Dates"] = "Show Dates";
 L["Hide Dates"] = "Hide Dates";
 L["Pinned Entries"] = "Pinned Entries";
 L["Pinned Entry Format"] = "Pinned  %d/%d";
+L["Create A New Entry"] = "Create A New Entry";
+L["Custom Achievement"] = "Custom Achievement";
+L["Custom Achievement Description"] = "This is the description.";
+L["Custom Achievement Select And Edit"] = "Select an entry to edit.";
+L["Cancel"] = "Cancel";
+L["Color"] = "Color";
+L["Icon"] = "Icon";
+L["Description"] = "Description";
+L["Points"] = "Points";
+L["Reward"] = "Reward";
+L["Date"] = "Date";
+L["Click And Hold"] = "Click and Hold";
+L["To Do List"] = "To-Do";
+L["Error Alert Bookmarks Too Many"] = "You may only bookmark %d achievements at a time.";
+L["Instruction Add To To Do List"] = string.format("%s Left Click on an unearned achievement to add it to your to-do list.", NARCI_MODIFIER_ALT);
+L["Instruction Remove From To Do List"] = string.format("%s Left Click to remove from to-do list.", NARCI_MODIFIER_ALT);
+L["DIY"] = "DIY";
+L["DIY Tab Tooltip"] = "Create a custom Achievement for screenshot purpose.";
 
 
 --Barbershop--

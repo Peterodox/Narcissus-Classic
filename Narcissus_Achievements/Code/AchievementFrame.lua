@@ -1,5 +1,3 @@
-local SHOW_GUILD_ACHIEVEMENT = GetGuildCategoryList and true
-
 local _, addon = ...
 local StatCardController = addon.StatCardController;
 local GetCategoryNumAchievements = addon.GetCustomCategoryNumAchievements;
@@ -7,6 +5,11 @@ local IsBossCard = addon.IsBossCard;
 local GetStatisticInfo = addon.GetStatisticInfo;
 local DataProvider = addon.DataProvider;
 local PinUtil = addon.PinUtil;
+local BookmarkUtil = addon.BookmarkUtil;
+
+
+NarciAchievementSearchBoxMixin = {};
+
 
 --Constant
 local NUM_ACHIEVEMENT_CARDS = 8;
@@ -14,6 +17,7 @@ local LEGACY_ID = 15234;
 local FEAT_OF_STRENGTH_ID = 81;
 --local GUILD_FEAT_OF_STRENGTH_ID = 15093;
 --local GUILD_CATEGORY_ID = 15076;
+local TITLE_REWARD_FORMAT = string.gsub((RENOWN_REWARD_TITLE_NAME_FORMAT or "Title: %s"), "%%s", "");
 
 local sin = math.sin;
 local cos = math.cos;
@@ -26,12 +30,14 @@ local pi = math.pi;
 local floor = math.floor;
 local ceil = math.ceil;
 local After = C_Timer.After;
-local gsub = string.gsub;
 local bband = bit.band;
 local format = string.format;
 local tremove = table.remove;
 local tinsert = table.insert;
+local gsub = string.gsub;
+local find = string.find;
 
+local CreateFrame = CreateFrame;
 local GetAchievementNumCriteria = GetAchievementNumCriteria;
 local GetAchievementCriteriaInfo = GetAchievementCriteriaInfo;
 local GetRewardItemID = C_AchievementInfo.GetRewardItemID;
@@ -91,18 +97,18 @@ end
 
 local themeID = 0;
 local showNotEarnedMark = false;
-local isDarkTheme = true;
+local IS_DARK_THEME = true;
 local isGuildView = false;
-local texturePrefix = "Interface\\AddOns\\Narcissus_Achievements\\Art\\DarkWood\\";
+local TEXTURE_PATH = "Interface\\AddOns\\Narcissus_Achievements\\Art\\DarkWood\\";
 
 local function ReskinButton(button)
     --if true then return end
-    button.border:SetTexture(texturePrefix.."AchievementCardBorder");
-    button.background:SetTexture(texturePrefix.."AchievementCardBackground");
-    button.bottom:SetTexture(texturePrefix.."AchievementCardBackground");
-    button.lion:SetTexture(texturePrefix.."Lion");
-    button.mask:SetTexture(texturePrefix.."AchievementCardBorderMask");
-    local isDarkTheme = isDarkTheme;
+    button.border:SetTexture(TEXTURE_PATH.."AchievementCardBorder");
+    button.background:SetTexture(TEXTURE_PATH.."AchievementCardBackground");
+    button.bottom:SetTexture(TEXTURE_PATH.."AchievementCardBackground");
+    button.lion:SetTexture(TEXTURE_PATH.."Lion");
+    button.mask:SetTexture(TEXTURE_PATH.."AchievementCardBorderMask");
+    local isDarkTheme = IS_DARK_THEME;
     button.RewardFrame.background:SetShown(not isDarkTheme);
     button.RewardFrame.rewardNodeLeft:SetShown(isDarkTheme);
     button.RewardFrame.rewardNodeRight:SetShown(isDarkTheme);
@@ -154,10 +160,17 @@ local CategoryButtons = {
     player = { parentButtons = {}, buttons = {}, },
     guild = { parentButtons = {}, buttons = {}, },
     stats = { parentButtons = {}, buttons = {}, },
+    todo = { parentButtons = {}, buttons = {}, },
 };
 
 local IS_STAT_CATEGORY = {
     [-2] = true,    --Used to show pinned statistics
+};
+
+local ToDoListData = {
+    buttons = {},
+    parentButtons = {},
+    structure = {},
 };
 
 function CategoryButtons:GetActiveParentButtons(tabID)
@@ -168,6 +181,8 @@ function CategoryButtons:GetActiveParentButtons(tabID)
         return self.guild.parentButtons;
     elseif tabID == 3 then
         return self.stats.parentButtons;
+    elseif tabID == 5 then
+        return ToDoListData.parentButtons;
     end
 end
 
@@ -176,6 +191,7 @@ local CategoryStructure = {
     guild = {},
     stats = {},
 };
+
 
 local function IsAccountWide(flags)
     --ACHIEVEMENT_FLAGS_ACCOUNT
@@ -258,6 +274,11 @@ animFlyIn:SetScript("OnUpdate", function(self, elapsed)
     if self.total >= 0.2 then
         scale = 1;
         local textAlpha = outQuart(self.total - 0.2, 0, 1, 0.2);
+        if textAlpha > 1 then
+            textAlpha = 1;
+        elseif textAlpha < 0 then
+            textAlpha = 0;
+        end
         self.header:SetAlpha(textAlpha);
         self.description:SetAlpha(textAlpha);
         self.date:SetAlpha(textAlpha);
@@ -274,6 +295,12 @@ animFlyIn:SetScript("OnUpdate", function(self, elapsed)
         self.date:SetAlpha(1);
         self.reward:SetAlpha(1);
         self:Hide();
+    end
+
+    if alpha > 1 then
+        alpha = 1;
+    elseif alpha < 0 then
+        alpha = 0;
     end
     self.background:SetAlpha(alpha);
     self.ObjectiveFrame:SetAlpha(alpha);
@@ -358,42 +385,46 @@ local function DisplayProgress(id, flags)
             numIncomplete = 0;
         else
             local criteriaString, criteriaType, completed, quantity, reqQuantity, charName, flags, assetID, quantityString;
+
             for i = 1, numCriteria do
                 criteriaString, criteriaType, completed, quantity, reqQuantity, charName, flags, assetID, quantityString = GetAchievementCriteriaInfo(id, i);
-                --print("criteriaType: "..criteriaType)
-                if ( bband(flags, 1) == 1 ) then  --EVALUATION_TREE_FLAG_PROGRESS_BAR = 1
-                    if ( completed == false ) then
-                        numIncomplete = numIncomplete + 1;
-                        tinsert(iData.bars, {quantity, reqQuantity, criteriaString});
+                --print("criteriaType: "..criteriaType)     --debug
+
+                if criteriaType == 8 and assetID then     --Meta, CRITERIA_TYPE_ACHIEVEMENT
+                    if completed then
+                        numCompleted = numCompleted + 1;
+                        local icon = DataProvider:GetAchievementInfo(assetID, 10);
+                        tinsert(cData.icons, icon);
+                        tinsert(cData.assetIDs, assetID);
                     else
+                        numIncomplete = numIncomplete + 1;
+                        local icon = DataProvider:GetAchievementInfo(assetID, 10);
+                        tinsert(iData.icons, icon);
+                        tinsert(iData.assetIDs, assetID);
+                    end
+                elseif bband(flags, 1) == 1 then     --EVALUATION_TREE_FLAG_PROGRESS_BAR = 1
+                    if completed then
                         numCompleted = numCompleted + 1;
                         tinsert(cData.bars, {quantity, reqQuantity, criteriaString});
-                    end
-                else
-                    if ( completed == false ) then
-                        numIncomplete = numIncomplete + 1;
-                        criteriaString = "|CFF808080" .. criteriaString .. "|r";
-                        tinsert(iData.names, criteriaString);
-                        if criteriaType == 8 and assetID then  --CRITERIA_TYPE_ACHIEVEMENT
-                            local icon = DataProvider:GetAchievementInfo(assetID, 10);
-                            iData.icons[numIncomplete] = icon;
-                            iData.assetIDs[numIncomplete] = assetID;
-                        end
                     else
+                        numIncomplete = numIncomplete + 1;
+                        tinsert(iData.bars, {quantity, reqQuantity, criteriaString});
+                    end
+                else    --TextStrings
+                    if completed then
                         numCompleted = numCompleted + 1;
                         criteriaString = "|CFF5fbb46" .. criteriaString .. "|r"; --00FF00
                         tinsert(cData.names, criteriaString);
-                        if criteriaType == 8 and assetID then  --CRITERIA_TYPE_ACHIEVEMENT
-                            local icon = DataProvider:GetAchievementInfo(assetID, 10);
-                            cData.icons[numCompleted] = icon;
-                            cData.assetIDs[numCompleted] = assetID;
-                        end
+                    else
+                        numIncomplete = numIncomplete + 1;
+                        criteriaString = "|CFF808080" .. criteriaString .. "|r";
+                        tinsert(iData.names, criteriaString);
                     end
                 end
             end
         end
     --end
-    
+
     cData.count = numCompleted;
     iData.count = numIncomplete;
 
@@ -410,11 +441,8 @@ end
 local function ToggleTracking(id)
     if not id then return end;
 
-    local isTracking;
-
     if DataProvider:IsTrackedAchievement(id) then
-        RemoveTrackedAchievement(id);
-        isTracking = false;
+        DataProvider:StopTracking(id);
     else
         local MAX_TRACKED_ACHIEVEMENTS = 10;
         if ( DataProvider.numTrackedAchievements >= MAX_TRACKED_ACHIEVEMENTS ) then
@@ -427,17 +455,10 @@ local function ToggleTracking(id)
             UIErrorsFrame:AddMessage(ERR_ACHIEVEMENT_WATCH_COMPLETED, 1.0, 0.1, 0.1, 1.0);
             return;
         end
-    
-        AddTrackedAchievement(id);
-        isTracking = true;
-    end
 
-    if WatchFrame_Update then
-        --For Classic
-        WatchFrame_Update();
+        DataProvider:StartTracking(id);
+        return true
     end
-
-    return isTracking
 end
 
 local function ProcessModifiedClick(button)
@@ -457,9 +478,15 @@ local function ProcessModifiedClick(button)
 				end
 			end
 		end
-		if ( not handled and IsModifiedClick("QUESTWATCHTOGGLE") ) then
-            local isTracking = ToggleTracking(achievementID);
-            button.trackIcon:SetShown(isTracking);
+		if not handled then
+            if IsModifiedClick("QUESTWATCHTOGGLE") and not IsAltKeyDown() then
+                local isTracking = ToggleTracking(achievementID);
+                button.trackIcon:SetShown(isTracking);
+            end
+            if IsAltKeyDown() then
+                BookmarkUtil:ToggleBookmark(achievementID);
+                button.BookmarkIcon:SetShown(BookmarkUtil:IsBookmarked(achievementID));
+            end
         end
     end
     return isModifiedClick
@@ -472,24 +499,70 @@ local function AchievementCard_OnClick(self)
 end
 
 local function FormatRewardText(id, rewardText)
-    if isDarkTheme then
-        local itemID = GetRewardItemID(id);
-        if itemID then
-            local itemID, itemType, itemSubType, _, icon, itemClassID, itemSubClassID = GetItemInfoInstant(itemID);
-            if itemSubType == "Mount" then
-                rewardText = gsub(rewardText, ".+:(.+)", "|cff808080".. "Mount:" .."|r|cff8950c6".."%1".."|r");
-            elseif itemSubType == "Companion Pets" then
-                rewardText = gsub(rewardText, ".+:(.+)", "|cff808080".. "Pet:" .."|r|cfff2b344".."%1".."|r");
-            else
-                rewardText = "|cffa3d39c"..rewardText.."|r";
+    local rawText = rewardText;
+    local rewardItemID = GetRewardItemID(id);
+    local categoryText, colon, rewardName;
+
+    if rewardItemID then
+        categoryText, colon, rewardName = string.match(rewardText, "(.+)([:：]+)(.+)");
+    end
+
+    if categoryText and colon and rewardName then
+        local itemID, itemType, itemSubType, _, icon, itemClassID, itemSubClassID = C_Item.GetItemInfoInstant(rewardItemID);
+        local itemProcessed;
+        if itemSubType == "Mount" then
+            local mountID = C_MountJournal.GetMountFromItem(itemID);
+            if mountID then
+                local mountName = C_MountJournal.GetMountInfoByID(mountID);
+                if mountName then
+                    categoryText = MOUNT or categoryText;
+                    rewardName = " "..mountName;
+                    itemProcessed = true;
+                end
             end
-            return rewardText, itemID
+        elseif C_ToyBox.GetToyInfo(itemID) ~= nil then
+            categoryText = TOY or categoryText;
+            itemProcessed = true;
         else
-            return ("|cffa3d39c"..rewardText.."|r");      --Pastel Yellow Green
+            local petName = C_PetJournal.GetPetInfoByItemID(rewardItemID);
+            if petName then
+                categoryText = PET or categoryText;
+                rewardName = " "..petName;
+                itemProcessed = true;
+            else
+
+            end
+        end
+
+        if IS_DARK_THEME then
+            rewardText = format("|cff808080%s%s|r|cff8950c6%s|r", categoryText, colon, rewardName);
+        else
+            rewardText = "|cffffd200"..categoryText..colon..rewardName.."|r";
+        end
+
+        if find(rawText, TITLE_REWARD_FORMAT) then
+            if itemProcessed then
+                if IS_DARK_THEME then
+                    rawText = "|cffa3d39c"..rawText.."|r";
+                end
+                rewardText = rawText.."   "..rewardText;
+            else
+                if IS_DARK_THEME then
+                    rewardText = "|cffa3d39c"..rawText.."|r";
+                else
+                    rewardText = rawText;
+                end
+            end
         end
     else
-        return ("|cffffd200"..rewardText.."|r");
+        if IS_DARK_THEME then
+            rewardText = "|cffa3d39c"..rawText.."|r";
+        else
+            rewardText = "|cffffd200"..rewardText.."|r";
+        end
     end
+
+    return rewardText, rewardItemID
 end
 
 local function GetProgressivePoints(achievementID, basePoints)
@@ -523,6 +596,8 @@ local function FormatAchievementCard(button, id, name, points, completed, month,
 
     button.id = id;
     button.trackIcon:SetShown( DataProvider:IsTrackedAchievement(id) );
+    button.BookmarkIcon:SetShown(BookmarkUtil:IsBookmarked(id));
+
     if ( not completed or ( not isGuild and not wasEarnedByMe ) ) and (showNotEarnedMark) then
         button.NotEarned:Show();
     else
@@ -543,13 +618,13 @@ local function FormatAchievementCard(button, id, name, points, completed, month,
 
     if IsAccountWide(flags) then
         if completed then
-            if isDarkTheme then
+            if IS_DARK_THEME then
                 headerObject:SetTextColor(0.427, 0.812, 0.965); --(0.427, 0.812, 0.965)(0.4, 0.755, 0.9)
             else
                 headerObject:SetTextColor(1, 1, 1);
             end
         else
-            if isDarkTheme then
+            if IS_DARK_THEME then
                 headerObject:SetTextColor(0.214, 0.406, 0.484);
             else
                 headerObject:SetTextColor(0.5, 0.5, 0.5);
@@ -557,13 +632,13 @@ local function FormatAchievementCard(button, id, name, points, completed, month,
         end
     else
         if completed then
-            if isDarkTheme then
+            if IS_DARK_THEME then
                 headerObject:SetTextColor(0.9, 0.82, 0.58);  --(1, 0.91, 0.647); --(0.9, 0.82, 0.58) --(0.851, 0.774, 0.55)
             else
                 headerObject:SetTextColor(1, 1, 1);
             end
         else
-            if isDarkTheme then
+            if IS_DARK_THEME then
                 headerObject:SetTextColor(0.5, 0.46, 0.324);
             else
                 headerObject:SetTextColor(0.5, 0.5, 0.5);
@@ -604,7 +679,7 @@ local function FormatAchievementCard(button, id, name, points, completed, month,
         button.itemID = itemID;
         button.RewardFrame:Show();
     else
-        if isDarkTheme then
+        if IS_DARK_THEME then
             rewardHeight = 2;
         else
             rewardHeight = 8;
@@ -654,7 +729,7 @@ local function FormatAchievementCard(button, id, name, points, completed, month,
             button.isDark = false;
             button.icon:SetDesaturated(false);
             button.points:SetTextColor(0.8, 0.8, 0.8);
-            if isDarkTheme then
+            if IS_DARK_THEME then
                 button.description:SetTextColor(0.72, 0.72, 0.72);
             else
                 button.description:SetTextColor(0, 0, 0);
@@ -676,7 +751,7 @@ local function FormatAchievementCard(button, id, name, points, completed, month,
             button.isDark = true;
             button.icon:SetDesaturated(true);
             button.points:SetTextColor(0.6, 0.6, 0.6);
-            if isDarkTheme then
+            if IS_DARK_THEME then
                 button.description:SetTextColor(0.6, 0.6, 0.6);
             else
                 button.description:SetTextColor(0, 0, 0);
@@ -709,7 +784,7 @@ end
 
 local function InspectAchievement(achievementID)
     if not achievementID then return end;
-    
+
     local id, name, points, completed, month, day, year, description, flags, icon, rewardText, isGuild, wasEarnedByMe = DataProvider:GetAchievementInfo(achievementID);
     local displayCard;
     if DataProvider:IsStatistic(achievementID) then
@@ -766,7 +841,7 @@ function ScrollUtil:ResetHeights()
     self.position = 1;
     self.lastOffset = 0;
     self.nextOffset = 0;
-    wipe(self.heightData);
+    self.heightData = {};
 end
 
 function ScrollUtil:GetScrollRange()
@@ -782,7 +857,7 @@ function ScrollUtil:SetCardData(cardIndex, achievementID, description, rewardTex
     if rewardText and rewardText ~= "" then
         rewardHeight = 22;
     else
-        if isDarkTheme then
+        if IS_DARK_THEME then
             rewardHeight = 2;
         else
             rewardHeight = 8;
@@ -853,7 +928,7 @@ function ScrollUtil:UpdateScrollChild(direction)
         local bottomButton = tremove(self.activeCards);
         tinsert(self.activeCards, 1, bottomButton);
     end
-    wipe(self.positionToButton);
+    self.positionToButton = {};
     local p = self.position;
     local id;
     local positionIndex;
@@ -1064,6 +1139,30 @@ local function Slice_UpdateStatCards(categoryID, startIndex)
     return numProcessed + 1, processComplete
 end
 
+local function Slice_UpdateToDoList(categoryID, startIndex)
+    local slice = 4;
+    local id, name, points, completed, month, day, year, description, flags, icon, rewardText, isGuild, wasEarnedByMe;
+    local processComplete = false;
+    local numProcessed = 0;
+
+    for i = startIndex, startIndex + slice do
+        id = BookmarkUtil:GetAchievementIDInCategory(categoryID, i);
+        id, name, points, completed, month, day, year, description, flags, icon, rewardText, isGuild, wasEarnedByMe = DataProvider:GetAchievementInfo(id);
+        if i > 0 and id then
+            if i <= NUM_ACHIEVEMENT_CARDS then
+                FormatAchievementCardByIndex(i, id, name, points, completed, month, day, year, description, flags, icon, rewardText, isGuild, wasEarnedByMe);
+            end
+            ScrollUtil:SetCardData(i, id, description, rewardText);
+            numProcessed = i;
+        else
+            processComplete = true;
+            break;
+        end
+    end
+
+    return numProcessed + 1, processComplete
+end
+
 local function UpdateAchievementScrollRange()
     local scrollBar = AchievementContainer.scrollBar;
     local range = ScrollUtil:GetScrollRange();
@@ -1189,6 +1288,27 @@ local function UpdateStatCardsBySlice(categoryID)
     StatCardController:PlayAnimation();
 end
 
+local function UpdateToDoListBySlice(categoryID)
+    ScrollUtil:ResetHeights();
+    processor:Hide();
+    AchievementContainer.scrollBar:SetValue(0);
+    for i = 1, NUM_ACHIEVEMENT_CARDS do
+        AchievementCards[i]:Hide();
+    end
+
+    local numAchievements = BookmarkUtil:GetNumAchievementsInCategory(categoryID);
+    DataProvider.numAchievements = numAchievements;
+    processor.arg1 = categoryID;
+    processor.arg2 = 1;     --fromIndex
+    processor.func = Slice_UpdateToDoList;
+    processor:Start();
+
+    --animation
+    if numAchievements ~= 0 then
+        animFlip:Play(1);
+    end
+end
+
 ---------------------------------------------------------------------------------------------------
 local function UpdateCategoryScrollRange()
     local button, buttons;
@@ -1272,7 +1392,7 @@ function animExpand:CollapseAll()
         button.drawer:Hide();
         button.drawer:SetAlpha(0);
         button.expanded = nil;
-        if not button.isStats then
+        if not (button.isStats or button.isToDo) then
             button.progress:Hide();
             button.percentSign:Show();
             button.value:Show();
@@ -1325,6 +1445,16 @@ end
 
 local function UpdateCategoryButtonProgress(button)
     local categoryID = button.id;
+
+    if button.isToDo then
+        local numAchievements = BookmarkUtil:GetNumAchievementsInCategory(categoryID);
+        button.progress:SetText(numAchievements);
+        button.progress:Show();
+        button.percentSign:Hide();
+        button.value:Hide();
+        return
+    end
+
     local totalAchievements, totalCompleted = GetCategoryNumAchievements(categoryID, true);   --ACHIEVEMENT_COMPARISON_SUMMARY_ID
 
     button.numAchievements, button.numCompleted = totalAchievements, totalCompleted;
@@ -1385,7 +1515,6 @@ local function UpdateCategoryButtonProgress(button)
     end
 
     button.totalAchievements, button.totalCompleted = totalAchievements, totalCompleted;
-    
 
     if totalAchievements == 0 or totalCompleted == 0 then
         button.fill:Hide();
@@ -1444,27 +1573,15 @@ local function SelectCategory(categoryID)
         if categoryID == -1 then
             UpdateSummaryFrame();
             SummaryFrame:Show();
+        elseif TabUtil:IsToDoList() then
+            UpdateToDoListBySlice(categoryID);
+            SummaryFrame:Hide();
+            InspectionFrame.numAchievements = BookmarkUtil:GetNumAchievementsInCategory(categoryID);
         else
             UpdateAchievementCardsBySlice(categoryID);
             SummaryFrame:Hide();
             InspectionFrame.numAchievements = GetCategoryNumAchievements(categoryID, false);
         end
-    end
-end
-
-local function SubCategoryButton_OnClick(button)
-    local categoryID = button.id;
-    if categoryID ~= DataProvider.currentCategory then
-        --print(categoryID);
-        local lastButton = DataProvider:GetCategoryButtonByID(DataProvider.currentCategory);
-        DataProvider.currentCategory = categoryID;
-        if lastButton then
-            lastButton.label:SetTextColor(0.8, 0.8, 0.8);
-        end
-        button.label:SetTextColor(1, 0.91, 0.647);
-        SelectCategory(categoryID);
-    else
-        --print("old")
     end
 end
 
@@ -1484,6 +1601,31 @@ local function ToggleFeatOfStrenghtText(button)
     else
         MainFrame.FeatOfStrengthText:Hide();
     end
+end
+
+local function SubCategoryButton_OnClick(button)
+    local categoryID = button.id;
+    if categoryID ~= DataProvider.currentCategory then
+        --print(categoryID);
+        local lastButton = DataProvider:GetCategoryButtonByID(DataProvider.currentCategory);
+        DataProvider.currentCategory = categoryID;
+        if lastButton then
+            lastButton.label:SetTextColor(0.8, 0.8, 0.8);
+        end
+
+        if button.isToDo then
+            --Some hack
+            for _, b in pairs(ToDoListData.buttons) do
+                b.label:SetTextColor(0.8, 0.8, 0.8);
+            end
+        end
+
+        button.label:SetTextColor(1, 0.91, 0.647);
+        SelectCategory(categoryID);
+    else
+        --print("old")
+    end
+    ToggleFeatOfStrenghtText(button);
 end
 
 local function CategoryButton_OnClick(button, mouse)
@@ -1511,6 +1653,8 @@ local function CategoryButton_OnClick(button, mouse)
 
     if button.isStats then
 
+    elseif button.isToDo then
+        
     else
         if button.expanded then
             button.progress:Show();
@@ -1558,10 +1702,9 @@ local function BuildCategoryStructure(tabID)
 
 
     local categories, structure, feats, legacys;
+    local IsToDoList;
+
     if tabID == 2 then
-        if not SHOW_GUILD_ACHIEVEMENT  then
-            return
-        end
         categories = GetGuildCategoryList();
         structure = CategoryStructure.guild;
         feats = { FEAT_OF_STRENGTH_ID };
@@ -1580,6 +1723,13 @@ local function BuildCategoryStructure(tabID)
         for k, id in pairs(categories) do
             IS_STAT_CATEGORY[id] = true;
         end
+    elseif tabID == 5 then
+        IsToDoList = true;
+        ToDoListData.structure = {};    --To-do list category may change
+        categories = BookmarkUtil:GetCategoryList();
+        structure = ToDoListData.structure;
+        feats = {};
+        legacys = {};
     end
 
     local id;
@@ -1588,19 +1738,29 @@ local function BuildCategoryStructure(tabID)
     local subCategories = {};
 
     local numParent = 0;
-    
+
     for i = 1, #categories do
         id = categories[i];
         name, parentID = DataProvider:GetCategoryInfo(id);
-        --print(name, parentID)
-        if (parentID == -1 or parentID == 15076) then
-            if not id2Order[id] then 
+
+        if DataProvider:IsRootCategory(id) then
+            if not id2Order[id] then
                 numParent = numParent + 1;
                 structure[ numParent ] = { ["id"] = id, ["name"] = name, ["children"] = {} };
                 id2Order[ id ] = numParent;
             end
         else
             tinsert(subCategories, id);
+
+            if IsToDoList then
+                --Bookmarked achievement may not be a Root Category, so we need to create that
+                if not id2Order[parentID] then
+                    numParent = numParent + 1;
+                    name = DataProvider:GetCategoryInfo(parentID);
+                    structure[ numParent ] = { ["id"] = parentID, ["name"] = name, ["children"] = {} };
+                    id2Order[ parentID ] = numParent;
+                end
+            end
         end
 
         if parentID == LEGACY_ID then
@@ -1614,12 +1774,31 @@ local function BuildCategoryStructure(tabID)
     for i = 1, #subCategories do
         id = subCategories[i];
         name, parentID = DataProvider:GetCategoryInfo(id);
-        
+
         order = id2Order[parentID];
-        tinsert( structure[ order ].children,  id);
+        if order then
+            tinsert( structure[ order ].children,  id);
+        end
     end
 
     structure.numCategories = #categories;
+end
+
+local function SetCategoryButtonType(categoryButton, index)
+    if index == categoryButton.categoryType then return end;
+    categoryButton.categoryType = index;
+
+    if index == 1 then  --Category
+        categoryButton:SetWidth(208);
+        categoryButton.fillWidth = 198;
+        categoryButton.background:SetTexture(TEXTURE_PATH.."CategoryButton");
+        categoryButton.background:SetTexCoord(0.125, 0.875, 0, 1);
+    elseif index == 2 then  --Subcategory
+        categoryButton:SetWidth(192);
+        categoryButton.fillWidth = 182;
+        categoryButton.background:SetTexture(TEXTURE_PATH.."SubCategoryButton");
+        categoryButton.background:SetTexCoord(0.203125, 0.875, 0, 1);
+    end
 end
 
 local function CreateCategoryButtons(tabID)
@@ -1633,8 +1812,9 @@ local function CreateCategoryButtons(tabID)
         CategoryButtons.buttons = {};
     end
 
-    local isStats;
+    local isStats, isToDo;
     local parentButtons = CategoryButtons:GetActiveParentButtons(tabID);
+
     if tabID == 1 then
         buttons = CategoryButtons.player.buttons;
         structure = CategoryStructure.player;
@@ -1651,24 +1831,33 @@ local function CreateCategoryButtons(tabID)
         frame = CategoryContainer.ScrollChild.StatsCategory;
         isStats = true;
         --CategoryContainer.ScrollChild.GuildCategory:Hide();
+    elseif tabID == 5 then
+        buttons = ToDoListData.buttons;
+        structure = ToDoListData.structure;
+        frame = CategoryContainer.ScrollChild.ToDoCategory;
+        ToDoListData.parentButtons = {};
+        parentButtons = ToDoListData.parentButtons;
+        isToDo = true;
     end
     --frame:Show();
-    
+
     for i = 1, #structure do
         numButtons = numButtons + 1;
         parentButton = buttons[numButtons];
         parentData = structure[i];
         id = parentData.id;
-
         if not parentButton then
             parentButton = CreateFrame("Button", nil, frame, "NarciAchievementCategoryButtonTemplate");
             tinsert(buttons, parentButton);
-            tinsert(parentButtons, parentButton);
-            parentButton.isParentButton = true;
-            parentButton:SetScript("OnClick", CategoryButton_OnClick);
+        else
+            SetCategoryButtonType(parentButton, 1);
         end
-        
-        DataProvider.id2Button[id] = parentButton;
+        if not DataProvider.id2Button[id] then
+            DataProvider.id2Button[id] = parentButton;
+        end
+        tinsert(parentButtons, parentButton);
+        parentButton:SetScript("OnClick", CategoryButton_OnClick);
+        parentButton.isParentButton = true;
         parentButton:SetParent(frame);
         parentButton:ClearAllPoints();
 
@@ -1698,40 +1887,44 @@ local function CreateCategoryButtons(tabID)
         local numChildren = #parentData.children;
         parentButton.expandedHeight = numChildren * 32 + 32;
 
-        if isStats then
-            parentButton.isStats = true;
-        end
+        parentButton.isStats = (isStats and true) or nil;
+        parentButton.isToDo = (isToDo and true) or nil;
 
         for j = 1, numChildren do
-            button = buttons[numButtons + 1];
+            numButtons = numButtons + 1;
+            button = buttons[numButtons];
             id = parentData.children[j];
             if not button then
                 button = CreateFrame("Button", nil, parentButton.drawer, "NarciAchievementSubCategoryButtonTemplate");
                 button.label:SetWidth(130);
                 tinsert(buttons, button);
-                button:SetScript("OnClick", SubCategoryButton_OnClick);
+            else
+                SetCategoryButtonType(button, 2);
             end
-            DataProvider.id2Button[id] = button;
+            button:SetScript("OnClick", SubCategoryButton_OnClick);
+            if not DataProvider.id2Button[id] then
+                DataProvider.id2Button[id] = button;
+            end
+            button.isParentButton = nil;
             button:SetParent(parentButton.drawer);
 
             button:ClearAllPoints();
-            if j == 1 then
-                button:SetPoint("TOPRIGHT", parentButton.drawer, "BOTTOMRIGHT", 0, 0);
-            else
-                button:SetPoint("TOPRIGHT", buttons[numButtons], "BOTTOMRIGHT", 0, 0);
-            end
-            numButtons = numButtons + 1;
-            
+            button:SetPoint("TOPRIGHT", parentButton.drawer, "BOTTOMRIGHT", 0, 32*(1-j));
+
             button.id = id;
             button.label:SetText( DataProvider:GetCategoryInfo(id, 1) );
             button.noPercent = nil;
 
-            if isStats then
-                button.isStats = true;
-            end
+            button.isStats = (isStats and true) or nil;
+            button.isToDo = (isToDo and true) or nil;
         end
 
         UpdateCategoryButtonProgress(parentButton);
+    end
+
+    for i = numButtons + 1, #buttons do
+        buttons[i]:Hide();
+        buttons[i]:ClearAllPoints();
     end
 end
 
@@ -1783,13 +1976,13 @@ function NarciAchievementInspectionFrameMixin:OnLoad()
     InspectionFrame = self;
 
     local CompleteFrame = self.CriteriaFrame.LeftInset;
-    CompleteFrame.header:SetText("COMPLETED");
+    CompleteFrame.header:SetText(string.upper(CRITERIA_COMPLETED or "Completed"));
     CompleteFrame.header:SetTextColor(0.216, 0.502, 0.2);
     CompleteFrame.count:SetTextColor(0.216, 0.502, 0.2);
     self.numCompleted = CompleteFrame.count;
 
     local IncompleteFrame = self.CriteriaFrame.RightInset;
-    IncompleteFrame.header:SetText("INCOMPLETED");
+    IncompleteFrame.header:SetText(string.upper(INCOMPLETE or "Incomplete"));
     IncompleteFrame.header:SetTextColor(0.502, 0.2, 0.2);
     IncompleteFrame.count:SetTextColor(0.502, 0.2, 0.2);
     self.numIncomplete = IncompleteFrame.count;
@@ -2084,13 +2277,26 @@ local function FormatMetaButtons(container, data, count, completed)
         header:SetPoint("TOPLEFT", container, "BOTTOMLEFT", 3, -16);
     end
 
+    local focusedButtonIndex;
+
     if completed then
         header:SetText("");
         container.description:SetText("");
         container.points:SetText("");
         container.shield:Hide();
     else
-        buttons[1]:SetAchievement();
+        focusedButtonIndex = 1;
+    end
+
+    for i = 1, count do
+        if buttons[i]:IsMouseOver() then
+            focusedButtonIndex = i;
+            break
+        end
+    end
+
+    if focusedButtonIndex then
+        buttons[focusedButtonIndex]:SetAchievement();
     end
 
     --Update Scroll Range
@@ -2279,7 +2485,7 @@ end
 function NarciAchievementInspectionFrameMixin:DisplayCriteria(cData, iData)
     local numCompleted = cData.count;
     local numIncomplete = iData.count;
-    
+
     self.numCompleted:SetText(numCompleted);
     self.numIncomplete:SetText(numIncomplete);
 
@@ -2289,6 +2495,7 @@ function NarciAchievementInspectionFrameMixin:DisplayCriteria(cData, iData)
     local icon = cData.icons[1];
     local numBars = #cData.bars;
     local type = 1;
+
     if numBars ~= 0 then
         type = 3
     elseif icon then
@@ -2421,6 +2628,14 @@ end
 
 function NarciAchievementGoToCategoryButtonMixin:OnClick()
     if self.categoryID then
+        if TabUtil:IsToDoList() then
+            if self.isGuild then
+                TabUtil:ToggleAchievement(2);
+            else
+                TabUtil:ToggleAchievement(1);
+            end
+        end
+
         local categoryButton = DataProvider:GetCategoryButtonByID(self.categoryID, self.isGuild);
         if categoryButton and (self.categoryID ~= DataProvider.currentCategory) then
             if not categoryButton.isParentButton then
@@ -2552,6 +2767,8 @@ end
 NarciAchievementTooltipMixin = {};
 
 function NarciAchievementTooltipMixin:OnLoad()
+    NarciAPI.NineSliceUtil.SetUpBorder(self.FrameBorder, "whiteBorder", -12, 0.67, 0.67, 0.67);
+
     local animFade = NarciAPI_CreateAnimationFrame(0.25);
     self.animFade = animFade;
     animFade:SetScript("OnUpdate", function(frame, elapsed)
@@ -2604,7 +2821,8 @@ end
 
 function NarciAchievementTooltipMixin:ResizeAndShow()
     self:SetHeight( self.name:GetHeight() + self.description:GetHeight() + 4 + 24 );
-    
+    self:SetWidth( max(self.name:GetWrappedWidth() + (self.points:IsShown() and 48 or 0), self.description:GetWrappedWidth() + (self.date:IsShown() and 88 or 0) ) + 24);
+
     if not self:IsShown() then
         self.animFade.toAlpha = 1;
         self.showDelay:Show();
@@ -2626,9 +2844,11 @@ function NarciAchievementTooltipMixin:SetAchievement(id)
             self.name:SetTextColor(1, 0.91, 0.647);
         end
         self.date:SetText( FormatDate(day, month, year) );
+        self.date:Show();
     else
         self.name:SetTextColor(0.8, 0.8, 0.8);
         self.date:SetText("");
+        self.date:Hide();
     end
 
     if points == 0 then
@@ -2666,7 +2886,7 @@ end
 function NarciAchievementReturnButtonMixin:OnHide()
     self:Hide();
     self:StopAnimating();
-    wipe(self.structure);
+    self.structure = {};
 end
 
 function NarciAchievementReturnButtonMixin:SetLabelText(text)
@@ -2707,8 +2927,6 @@ function NarciAchievementReturnButtonMixin:OnClick()
     end
 end
 
-
-NarciAchievementSearchBoxMixin = {};
 
 local function InspectResult(button)
     local playAnimation = not InspectionFrame:IsShown();
@@ -2824,6 +3042,9 @@ function UpdateSummaryFrame(breakLoop)
 end
 
 ----------------------------------------------------------------------------------
+TabUtil.categories = {
+    "PlayerCategory", "GuildCategory", "StatsCategory", "ToDoCategory",
+};
 
 function TabUtil:SaveOffset()
     --currentTab before switching
@@ -2843,6 +3064,9 @@ function TabUtil:SaveOffset()
         --statistics
         self.lastStatButton = button;
         self.lastStatScrollValue = offset;
+    elseif self.tabID == 5 then
+        self.lastBookmarkButton = button;
+        self.lastBookmarkScrollValue = offset;
     end
     ShutInspection();
 end
@@ -2858,6 +3082,9 @@ function TabUtil:ResumeOffset()
     elseif self.tabID == 3 then
         lastButton = self.lastStatButton;
         lastOffset = self.lastStatScrollValue;
+    elseif self.tabID == 5 then
+        lastButton = self.lastBookmarkButton;
+        lastOffset = self.lastBookmarkScrollValue;
     end
     if lastButton then
         AchievementContainer:Show();
@@ -2866,7 +3093,9 @@ function TabUtil:ResumeOffset()
         ToggleFeatOfStrenghtText(lastButton);
     else
         if self.tabID == 4 then
-            
+
+        elseif self.tabID == 5 then
+            SummaryButton:Click();
         else
             SummaryButton:Click();
         end
@@ -2875,15 +3104,29 @@ function TabUtil:ResumeOffset()
     CategoryContainer.scrollBar:SetValue(lastOffset or 0);
 end
 
+function TabUtil:ShowCategory(categoryKey)
+    for _, name in ipairs(self.categories) do
+        CategoryContainer.ScrollChild[name]:SetShown(categoryKey == name);
+    end
+end
+
 function TabUtil:ToggleAchievement(tabID)
     if tabID ~= self.tabID then
         self:SaveOffset();
+
+        if self.tabID == 5 then
+            --Force update achievement list
+            DataProvider.currentCategory = nil;
+        end
+
         self.tabID = tabID;
         local isGuild = (tabID == 2);
         isGuildView = isGuild;
-        CategoryContainer.ScrollChild.PlayerCategory:SetShown(not isGuild);
-        CategoryContainer.ScrollChild.GuildCategory:SetShown(isGuild);
-        CategoryContainer.ScrollChild.StatsCategory:Hide();
+        if isGuild then
+            self:ShowCategory("GuildCategory");
+        else
+            self:ShowCategory("PlayerCategory");
+        end
         DIYContainer:Hide();
         EditorContainer:Hide();
         CategoryContainer:Show();
@@ -2900,9 +3143,7 @@ function TabUtil:ToggleStats()
     if self.tabID == 3 then return end;
     self:SaveOffset();
     self.tabID = 3;
-    CategoryContainer.ScrollChild.StatsCategory:Show();
-    CategoryContainer.ScrollChild.PlayerCategory:Hide();
-    CategoryContainer.ScrollChild.GuildCategory:Hide();
+    self:ShowCategory("StatsCategory");
     MainFrame.FeatOfStrengthText:Hide();
     MainFrame:UpdatePinCount();
     DIYContainer:Hide();
@@ -2926,7 +3167,7 @@ function TabUtil:ToggleDIY()
         DIYContainer:Refresh();
         DIYContainer.scrollBar:SetValue(0);
     end
-    
+
     EditorContainer:Show();
     CategoryContainer:Hide();
     AchievementContainer:Hide();
@@ -2936,9 +3177,59 @@ function TabUtil:ToggleDIY()
     self:EnableSearchBox(false);
 end
 
+function TabUtil:ToggleToDoList()
+    if self.tabID == 5 then return end;
+    self:SaveOffset();
+    self.tabID = 5;
+    DataProvider.currentCategory = nil;
+
+    AchievementContainer:Hide();
+    FilterButton:Disable();
+    SummaryButton:SetMode(5);
+    MainFrame:UpdateToDoListCount();
+    self:EnableSearchBox(false);
+    self:ShowCategory("ToDoCategory");
+
+    DIYContainer:Hide();
+    EditorContainer:Hide();
+    CategoryContainer:Show();
+    UpdateCategoryScrollRange();
+    self:ResumeOffset();
+
+    self:UpdateToDoListCategory();
+end
+
 function TabUtil:GetTabID()
     return self.tabID or 1;
 end
+
+function TabUtil:IsToDoList()
+    return self:GetTabID() == 5
+end
+
+function TabUtil:UpdateToDoListCategory()
+    local anyChange = BookmarkUtil:OnTabSelected();
+    if not anyChange then return end;
+
+    BuildCategoryStructure(5);
+    CreateCategoryButtons(5);
+
+    animExpand:CollapseAll();
+
+    local buttons = ToDoListData.buttons;
+    local numAchievements, numChildAchievements;
+    for _, button in pairs(buttons) do
+        numAchievements, numChildAchievements = BookmarkUtil:GetNumAchievementsInCategory(button.id);
+        if numChildAchievements and numChildAchievements > 0 then
+            numAchievements = numAchievements .. " ("..numChildAchievements..")";
+        end
+        button.progress:SetText(numAchievements);
+        button.progress:Show();
+        button.percentSign:Hide();
+        button.value:Hide();
+    end
+end
+
 --------------------------------------------------------------
 NarciAchievementFilterButtonMixin = {};
 
@@ -3002,15 +3293,18 @@ function NarciAchievementSummaryButtonMixin:OnClick()
         SelectCategory(-2);
         animExpand:CollapseAll();
         categoryID = - 2;
+        MainFrame.FeatOfStrengthText:Hide();
+    elseif self.modeID == 5 then    --To-do list
+        SelectCategory(-5);
     else
         categoryID = -1;
         SelectCategory(-1);
+        MainFrame.FeatOfStrengthText:Hide();
     end
     if DataProvider.currentCategory ~= categoryID then
         animExpand:CollapseAll();
         DataProvider.currentCategory = categoryID;
     end
-    MainFrame.FeatOfStrengthText:Hide();
 end
 
 function NarciAchievementSummaryButtonMixin:OnMouseDown()
@@ -3031,9 +3325,11 @@ function NarciAchievementSummaryButtonMixin:SetMode(modeID)
         self.label:SetText("DIY");
     else
         if modeID == 1 then
-            self.label:SetText(ACHIEVEMENT_SUMMARY_CATEGORY);
-        else
-            self.label:SetText(L["Pinned Entries"]);
+            self.label:SetText(ACHIEVEMENT_SUMMARY_CATEGORY or "Summary");
+        elseif modeID == 2 then
+            self.label:SetText(L["Pinned Entries"]);    --Pinned Stats
+        elseif modeID == 5 then
+            self.label:SetText(ACHIEVEMENTFRAME_FILTER_ALL or "All");
         end
         self:Enable();
     end
@@ -3052,7 +3348,7 @@ end
 
 
 local function CreateTabButtons()
-    local tabNames = {ACHIEVEMENTS, ACHIEVEMENTS_GUILD_TAB, STATISTICS, "DIY", L["Settings"]};
+    local tabNames = {ACHIEVEMENTS, ACHIEVEMENTS_GUILD_TAB, STATISTICS, "DIY", L["To Do List"], L["Settings"]};
     local frame = Narci_AchievementFrame;
     local buttons = {};
     local function DeselectRest(button)
@@ -3089,21 +3385,23 @@ local function CreateTabButtons()
         end,
 
         function(self)
+            TabUtil:ToggleToDoList();
+            DeselectRest(self);
+            self:Select();
+        end,
+
+        function(self)
             MainFrame.Settings:Toggle();
         end,
-    };
-
-    if not SHOW_GUILD_ACHIEVEMENT then
-        table.remove(tabNames, 2);
-        table.remove(funcs, 2);
-    end
-
+    }
+    
     local numTabs = #tabNames;
     for i = 1, numTabs do
         local button = CreateFrame("Button", nil, frame, "NarciAchievementTabButtonTemplate");
         tinsert(buttons, button);
         button:SetLabel(tabNames[i]);
         button.id = i;
+        button:SetID(i);
 
         if i == 1 then
             button:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 23, 0);
@@ -3323,16 +3621,14 @@ local function InitializeFrame(frame)
     CreateTabButtons();
     NarciAchievement_SelectTheme(NarciAchievementOptions.Theme or 1);
 
-    --
-    tinsert(UISpecialFrames, frame:GetName());
-
     frame:Show();
     UpdateSummaryFrame();
 
+    --To-do List
+    CreateCategoryButtons(5);
+
     --Reclaim Temp
-    wipe(CategoryStructure);
     CategoryStructure = nil;
-    CreateCategoryButtons = nil;
     CreateAchievementButtons = nil;
     CreateTabButtons = nil;
     InitializeFrame = nil;
@@ -3367,6 +3663,16 @@ function NarciAchievementFrameMixin:OnLoad()
 
     self:RegisterForDrag("LeftButton");
     self:SetAttribute("nodeignore", true);  --ConsolePort: Ignore this frame
+    table.insert(UISpecialFrames, self:GetName());
+end
+
+local function AchievementFrame_OnKeyDown(self, key)
+    if key == "ESCAPE" then
+        self:SetPropagateKeyboardInput(false);
+        self:Hide();
+    else
+        self:SetPropagateKeyboardInput(true);
+    end
 end
 
 function NarciAchievementFrameMixin:OnShow()
@@ -3380,10 +3686,12 @@ function NarciAchievementFrameMixin:OnShow()
     self:RegisterDynamicEvent(true);
     RefreshInspection();
     StatCardController:UpdateList();
+    --self:SetScript("OnKeyDown", AchievementFrame_OnKeyDown);
 end
 
 function NarciAchievementFrameMixin:OnHide()
     self:RegisterDynamicEvent(false);
+    --self:SetScript("OnKeyDown", nil);
 end
 
 function NarciAchievementFrameMixin:RegisterDynamicEvent(state)
@@ -3467,7 +3775,7 @@ function NarciAchievementFrameMixin:UpdatePinCount()
     local HeaderFrame = self.HeaderFrame;
     local total, cap = PinUtil:GetTotal();
     HeaderFrame.totalAchievements:SetText(L["Pinned Entries"]);
-    HeaderFrame.progress:SetText(string.format("%d/%d", total, cap));
+    HeaderFrame.progress:SetText(format("%d/%d", total, cap));
     HeaderFrame.progress:Show();
     HeaderFrame.value:Hide();
     HeaderFrame.percentSign:Hide();
@@ -3488,6 +3796,26 @@ function NarciAchievementFrameMixin:UpdatePinCount()
     end
 end
 
+function NarciAchievementFrameMixin:UpdateToDoListCount()
+    local HeaderFrame = self.HeaderFrame;
+    local total = BookmarkUtil:GetNumAchievementsInCategory(-5);
+    HeaderFrame.totalAchievements:SetText(L["To Do List"]);
+    HeaderFrame.progress:SetText(total);
+    HeaderFrame.progress:Show();
+    HeaderFrame.value:Hide();
+    HeaderFrame.percentSign:Hide();
+    HeaderFrame.fill:Hide();
+    HeaderFrame.fillEnd:Hide();
+
+    if total > 0 then
+        self.FeatOfStrengthText:Hide();
+    else
+        self.FeatOfStrengthText:SetText(L["Instruction Add To To Do List"]);
+        self.FeatOfStrengthText:Show();
+    end
+end
+
+
 --[[
 function NarciAchievement_FormatAlertCard(card)
     local achievementID = card.id;
@@ -3500,9 +3828,26 @@ end
 
 function NarciAchievement_ReskinButton(card)
     ReskinButton(card);
-    card.isDarkTheme = isDarkTheme;
+    card.isDarkTheme = IS_DARK_THEME;
 end
 --]]
+
+
+local BookmarkIconMixin = {};
+do
+    function BookmarkIconMixin:OnEnter()
+        local tooltip = GameTooltip;
+        tooltip:SetOwner(self, "ANCHOR_RIGHT");
+        tooltip:SetText(L["To Do List"], 1, 1, 1, true);
+        tooltip:AddLine(L["Instruction Remove From To Do List"], 1, 0.82, 0, true);
+        tooltip:Show();
+    end
+
+    function BookmarkIconMixin:OnLeave()
+        GameTooltip:Hide();
+    end
+end
+
 
 NarciAchievementLargeCardMixin = {};
 
@@ -3519,6 +3864,9 @@ function NarciAchievementLargeCardMixin:OnLoad()
     self:RegisterForDrag("LeftButton");
     self:SetScript("OnLoad", nil);
     self.OnLoad = nil;
+
+    self.BookmarkIcon:SetScript("OnEnter", BookmarkIconMixin.OnEnter);
+    self.BookmarkIcon:SetScript("OnLeave", BookmarkIconMixin.OnLeave);
 end
 
 function NarciAchievementLargeCardMixin:OnMouseDown()
@@ -3551,14 +3899,14 @@ function NarciAchievement_SelectTheme(index)
     NarciAchievementOptions.Theme = index;
 
     if index == 3 then
-        isDarkTheme = true;
-        texturePrefix = "Interface\\AddOns\\Narcissus_Achievements\\Art\\Flat\\";
+        IS_DARK_THEME = true;
+        TEXTURE_PATH = "Interface\\AddOns\\Narcissus_Achievements\\Art\\Flat\\";
     elseif index == 2 then
-        isDarkTheme = false;
-        texturePrefix = "Interface\\AddOns\\Narcissus_Achievements\\Art\\Classic\\";
+        IS_DARK_THEME = false;
+        TEXTURE_PATH = "Interface\\AddOns\\Narcissus_Achievements\\Art\\Classic\\";
     else
-        isDarkTheme = true;
-        texturePrefix = "Interface\\AddOns\\Narcissus_Achievements\\Art\\DarkWood\\";
+        IS_DARK_THEME = true;
+        TEXTURE_PATH = "Interface\\AddOns\\Narcissus_Achievements\\Art\\DarkWood\\";
     end
 
     --Statistics
@@ -3574,11 +3922,11 @@ function NarciAchievement_SelectTheme(index)
     if DIYContainer.cards then
         for i = 1, #DIYContainer.cards do
             ReskinButton(DIYContainer.cards[i]);
-            DIYContainer.cards[i].isDarkTheme = isDarkTheme;
+            DIYContainer.cards[i].isDarkTheme = IS_DARK_THEME;
         end
     end
     DIYContainer:RefreshTheme();
-    DIYContainer.NewEntry.background:SetTexture(texturePrefix.."NewEntry");
+    DIYContainer.NewEntry.background:SetTexture(TEXTURE_PATH.."NewEntry");
     if index == 1 then
         EditorContainer.notes:SetFontObject(NarciAchievementText);
         EditorContainer.notes:SetTextColor(0.68, 0.58, 0.51);
@@ -3613,10 +3961,10 @@ function NarciAchievement_SelectTheme(index)
     else
         resultButtonGap = -2
     end
-    ResultFrame.background:SetTexture(texturePrefix.."SearchResultFrame");
+    ResultFrame.background:SetTexture(TEXTURE_PATH.."SearchResultFrame");
     for i = 1, #ResultFrame.buttons do
-        ResultFrame.buttons[i].background:SetTexture(texturePrefix.."ResultButton");
-        ResultFrame.buttons[i].mask:SetTexture(texturePrefix.."ResultButtonMask");
+        ResultFrame.buttons[i].background:SetTexture(TEXTURE_PATH.."ResultButton");
+        ResultFrame.buttons[i].mask:SetTexture(TEXTURE_PATH.."ResultButtonMask");
         if i ~= 1 then
             ResultFrame.buttons[i]:SetPoint("TOP", ResultFrame.buttons[i - 1], "BOTTOM", 0, resultButtonGap);
         end
@@ -3624,27 +3972,27 @@ function NarciAchievement_SelectTheme(index)
 
     --Border Skin
     local HeaderFrame = MainFrame.HeaderFrame;
-    HeaderFrame.background:SetTexture(texturePrefix.."BoxHeaderBorder");
-    HeaderFrame.mask:SetTexture(texturePrefix.."BoxHeaderBorderMask");
+    HeaderFrame.background:SetTexture(TEXTURE_PATH.."BoxHeaderBorder");
+    HeaderFrame.mask:SetTexture(TEXTURE_PATH.."BoxHeaderBorderMask");
 
-    MainFrame.background:SetTexture(texturePrefix.."BoxRight");
-    MainFrame.categoryBackground:SetTexture(texturePrefix.."BoxLeft");
+    MainFrame.background:SetTexture(TEXTURE_PATH.."BoxRight");
+    MainFrame.categoryBackground:SetTexture(TEXTURE_PATH.."BoxLeft");
 
-    AchievementContainer.OverlayFrame.top:SetTexture(texturePrefix.."BoxRight");
-    AchievementContainer.OverlayFrame.bottom:SetTexture(texturePrefix.."BoxRight");
-    AchievementContainer.scrollBar.Thumb:SetTexture(texturePrefix.."SliderThumb");
+    AchievementContainer.OverlayFrame.top:SetTexture(TEXTURE_PATH.."BoxRight");
+    AchievementContainer.OverlayFrame.bottom:SetTexture(TEXTURE_PATH.."BoxRight");
+    AchievementContainer.scrollBar.Thumb:SetTexture(TEXTURE_PATH.."SliderThumb");
     
-    CategoryContainer.OverlayFrame.top:SetTexture(texturePrefix.."BoxLeft");
-    CategoryContainer.OverlayFrame.bottom:SetTexture(texturePrefix.."BoxLeft");
-    CategoryContainer.scrollBar.Thumb:SetTexture(texturePrefix.."SliderThumb");
+    CategoryContainer.OverlayFrame.top:SetTexture(TEXTURE_PATH.."BoxLeft");
+    CategoryContainer.OverlayFrame.bottom:SetTexture(TEXTURE_PATH.."BoxLeft");
+    CategoryContainer.scrollBar.Thumb:SetTexture(TEXTURE_PATH.."SliderThumb");
 
-    DIYContainer.OverlayFrame.top:SetTexture(texturePrefix.."BoxRight");
-    DIYContainer.OverlayFrame.bottom:SetTexture(texturePrefix.."BoxRight");
-    DIYContainer.scrollBar.Thumb:SetTexture(texturePrefix.."SliderThumb");
+    DIYContainer.OverlayFrame.top:SetTexture(TEXTURE_PATH.."BoxRight");
+    DIYContainer.OverlayFrame.bottom:SetTexture(TEXTURE_PATH.."BoxRight");
+    DIYContainer.scrollBar.Thumb:SetTexture(TEXTURE_PATH.."SliderThumb");
 
-    EditorContainer.OverlayFrame.top:SetTexture(texturePrefix.."BoxLeft");
-    EditorContainer.OverlayFrame.bottom:SetTexture(texturePrefix.."BoxLeft");
-    EditorContainer.scrollBar.Thumb:SetTexture(texturePrefix.."SliderThumb");
+    EditorContainer.OverlayFrame.top:SetTexture(TEXTURE_PATH.."BoxLeft");
+    EditorContainer.OverlayFrame.bottom:SetTexture(TEXTURE_PATH.."BoxLeft");
+    EditorContainer.scrollBar.Thumb:SetTexture(TEXTURE_PATH.."SliderThumb");
     
     --Scroll frame inner Shadow
     local showShadow = index == 1;
@@ -3658,21 +4006,21 @@ function NarciAchievement_SelectTheme(index)
     EditorContainer.OverlayFrame.bottomShadow:SetShown(showShadow);
 
     --Category Buttons
-    local cateButtons = {CategoryButtons.player.buttons, CategoryButtons.guild.buttons, CategoryButtons.stats.buttons};
+    local cateButtons = {CategoryButtons.player.buttons, CategoryButtons.guild.buttons, CategoryButtons.stats.buttons,  ToDoListData.buttons};
     for _, buttons in pairs(cateButtons) do
         for i = 1, #buttons do
             if buttons[i].isParentButton then
-                buttons[i].background:SetTexture(texturePrefix.."CategoryButton");
+                buttons[i].background:SetTexture(TEXTURE_PATH.."CategoryButton");
             else
-                buttons[i].background:SetTexture(texturePrefix.."SubCategoryButton");
+                buttons[i].background:SetTexture(TEXTURE_PATH.."SubCategoryButton");
             end
-            buttons[i].fill:SetTexture(texturePrefix.."CategoryButtonBar");
-            buttons[i].fillEnd:SetTexture(texturePrefix.."CategoryButtonBar");
+            buttons[i].fill:SetTexture(TEXTURE_PATH.."CategoryButtonBar");
+            buttons[i].fillEnd:SetTexture(TEXTURE_PATH.."CategoryButtonBar");
         end
     end
 
-    HeaderFrame.fill:SetTexture(texturePrefix.."CategoryButtonBar");
-    HeaderFrame.fillEnd:SetTexture(texturePrefix.."CategoryButtonBar");
+    HeaderFrame.fill:SetTexture(TEXTURE_PATH.."CategoryButtonBar");
+    HeaderFrame.fillEnd:SetTexture(TEXTURE_PATH.."CategoryButtonBar");
 
     --Header Reposition
     local offsetY = 0;
@@ -3683,11 +4031,17 @@ function NarciAchievement_SelectTheme(index)
     local FilterButton = MainFrame.FilterButton;
     FilterButton:ClearAllPoints();
     FilterButton:SetPoint("TOPRIGHT", MainFrame, "TOP", -2, -12 + offsetY);
-    FilterButton.texture:SetTexture(texturePrefix.."DropDownButton");
+    FilterButton.texture:SetTexture(TEXTURE_PATH.."DropDownButton");
 
     local CloseButton = MainFrame.CloseButton;
     CloseButton:ClearAllPoints();
     CloseButton:SetPoint("TOPRIGHT", MainFrame, "TOPRIGHT", -11, -11 + offsetY);
+    CloseButton.texture:SetTexture(TEXTURE_PATH.."CloseButton");
+    if index == 2 then
+        CloseButton:SetSize(39, 26);
+    else
+        CloseButton:SetSize(36, 26);
+    end
 
     local SearchBox = HeaderFrame.SearchBox
     SearchBox:ClearAllPoints();
@@ -3704,22 +4058,14 @@ function NarciAchievement_SelectTheme(index)
         reference:SetHeight(32);
     end
 
-    local CloseButton = MainFrame.CloseButton;
-    CloseButton.texture:SetTexture(texturePrefix.."CloseButton");
-    if index == 2 then
-        CloseButton:SetSize(39, 26);
-    else
-        CloseButton:SetSize(36, 26);
-    end
-
     SummaryButton:ClearAllPoints();
     SummaryButton:SetPoint("TOPLEFT", MainFrame, "TOPLEFT", 32, -8 + offsetY);
-    SummaryButton.texture:SetTexture(texturePrefix.."SummaryButton");
+    SummaryButton.texture:SetTexture(TEXTURE_PATH.."SummaryButton");
 
 
     --Tab buttons
     for i = 1, #TabButtons do
-        TabButtons[i]:SetButtonTexture(texturePrefix.."TabButton");
+        TabButtons[i]:SetButtonTexture(TEXTURE_PATH.."TabButton");
         if index == 1 then
             TabButtons[i]:SetTextOffset(28);
         else
@@ -3778,6 +4124,7 @@ function NarciAchievementFrameMixin:Init()
     BuildCategoryStructure(2);
     BuildCategoryStructure(1);
     BuildCategoryStructure(3);
+    BuildCategoryStructure(5);
     InitializeFrame(Narci_AchievementFrame);
     self:RegisterEvent("ACHIEVEMENT_EARNED");
     self:RegisterEvent("CRITERIA_EARNED");
@@ -3795,9 +4142,7 @@ local function OnAchivementEarned(achievementID)
     
     local categoryID = DataProvider:GetAchievementCategory(achievementID);
     if categoryID then
-        if DataProvider.achievementOrderCache[categoryID] then
-            wipe(DataProvider.achievementOrderCache[categoryID]);
-        end
+        DataProvider.achievementOrderCache[categoryID] = {};
         UpdateCategoryButtonProgressByCategoryID(categoryID);
         if categoryID == DataProvider.currentCategory then
             if MainFrame:IsShown() then
@@ -3839,7 +4184,7 @@ addon.ReskinButton = ReskinButton;
 addon.FormatAchievementCard = FormatAchievementCard;
 
 local function IsDarkTheme()
-    return isDarkTheme;
+    return IS_DARK_THEME;
 end
 
 addon.IsDarkTheme = IsDarkTheme;

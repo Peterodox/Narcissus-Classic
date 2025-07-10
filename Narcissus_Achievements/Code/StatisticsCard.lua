@@ -155,10 +155,8 @@ end
 -----------------------------------------------------------------------
 local GetAchievementInfo = GetAchievementInfo;
 local GetStatistic = GetStatistic;
-local EJ_GetInstanceInfo = EJ_GetInstanceInfo;  --Does not exist in 3.4.0
+local EJ_GetInstanceInfo = EJ_GetInstanceInfo;
 local DataProvider = {};
-
-
 
 local difficultyTypes = addon.difficultyTypes;
 

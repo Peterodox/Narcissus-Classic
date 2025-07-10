@@ -198,7 +198,7 @@
 					<OnLoad>
 						self:SetFrameLevel(self:GetParent():GetFrameLevel() - 1);
 						local tex = "Interface/AddOns/Narcissus/Art/Minimap/Panel";
-						local sampling = "TRILINEAR";
+						local sampling = "LINEAR";
 						self.Top:SetTexture(tex, nil, nil, sampling);
 						self.Middle:SetTexture(tex, nil, nil, sampling);
 						self.Bottom:SetTexture(tex, nil, nil, sampling);

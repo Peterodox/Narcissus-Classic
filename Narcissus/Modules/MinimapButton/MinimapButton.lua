@@ -11,6 +11,7 @@ local cos = math.cos;
 local sin = math.sin;
 local sqrt = math.sqrt;
 local atan2 = math.atan2;
+local IsAddOnLoaded = C_AddOns.IsAddOnLoaded;
 
 local GetMouseFocus = addon.API.GetMouseFocus;
 
@@ -92,22 +93,14 @@ function NarciMinimapButtonMixin:CreatePanel()
 	local button;
 	local buttons = {};
 
-	local LOCALIZED_NAMES = {L["Photo Mode"], DRESSUP_FRAME, L["Turntable"], ACHIEVEMENT_BUTTON};	-- CHARACTER_BUTTON, "Character Info" "Dressing Room" "Achievements"
+	local LOCALIZED_NAMES = {L["Photo Mode"], ACHIEVEMENT_BUTTON};	-- CHARACTER_BUTTON, "Character Info" "Dressing Room" "Achievements"
 	local frameNames = {};
-	frameNames[4] = "Narci_Achievement";
+	frameNames[2] = "Narci_Achievement";
 
 	local func = {
         function()
 		    Narci_OpenGroupPhoto();
         end,
-		
-		function()
-			Narci_ShowDressingRoom();
-		end,
-
-		function()
-			NarciOutfitShowcase:Open();
-		end,
 
 		function()
 			if not Narci_AchievementFrame then
@@ -140,6 +133,9 @@ function NarciMinimapButtonMixin:CreatePanel()
 	local middleHeight = 48 + (numButtons - 4) * BUTTON_HEIGHT;
 	local button1OffsetY = offsetY - middleHeight/2 + BUTTON_HEIGHT/2
 	local buttonFrameLevel = Panel:GetFrameLevel() + 1;
+	if middleHeight <= 0.1 then
+		middleHeight = 0.1;
+	end
 
 	local ClipFrame = Panel.ClipFrame;
 	ClipFrame:SetFrameLevel(buttonFrameLevel + 1);
@@ -343,6 +339,9 @@ end
 function NarciMinimapButtonMixin:OnLoad()
 	MiniButton = self;
 
+	self:SetScript("OnLoad", nil);
+	self.OnLoad = nil;
+
     self:RegisterEvent("PLAYER_ENTERING_WORLD");
 	self:SetFrameStrata("MEDIUM");
 	self:RegisterForClicks("LeftButtonUp","RightButtonUp","MiddleButtonUp");
@@ -384,8 +383,7 @@ function NarciMinimapButtonMixin:OnLoad()
 	end)
 
 
-	self:SetScript("OnLoad", nil);
-	self.OnLoad = nil;
+	self:SetScript("OnShow", self.OnShow);
 end
 
 function NarciMinimapButtonMixin:UpdatePosition()
@@ -592,7 +590,11 @@ function NarciMinimapButtonMixin:OnEnter()
 	if IsMouseButtonDown() then return; end;
 	self:ShowMouseMotionVisual(true);
 	if (not IsShiftKeyDown()) then
-		self:ShowSimpleTooltip();
+		if self.useMouseoverMenu then
+			self.onEnterDelay:Show();
+		else
+			self:ShowTooltip();
+		end
 	end
 end
 
@@ -686,7 +688,7 @@ function NarciMinimapButtonMixin:Init()
     local cornerRadius = 10;
 
     --Optimize this minimap button's radial offset
-    local IsAddOnLoaded = IsAddOnLoaded;
+
     if IsAddOnLoaded("AzeriteUI") then
         cornerRadius = 18;
         iconSize = 48;
@@ -717,6 +719,23 @@ function NarciMinimapButtonMixin:GetMenuInfo()
 	return self.menuInfo
 end
 
+function NarciMinimapButtonMixin:UpdateManager()
+	--If the button is collected by other addons
+	--We don't show the menu on mouseover, instead prompt user to use right-click to open the menu
+	local useMouseoverMenu;
+	local parent = self:GetParent();
+	if parent == Narci_MinimapButtonContainer or parent == Minimap then
+		useMouseoverMenu = true;
+	else
+		useMouseoverMenu = false;
+	end
+	useMouseoverMenu = useMouseoverMenu and (NarcissusDB and NarcissusDB.ShowModulePanelOnMouseOver);
+	self.useMouseoverMenu = useMouseoverMenu;
+end
+
+function NarciMinimapButtonMixin:OnShow()
+	self:UpdateManager();
+end
 
 do
     local SettingFunctions = addon.SettingFunctions;

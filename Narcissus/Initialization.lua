@@ -297,7 +297,6 @@ NarciAPI.GetAddOnVersionInfo = GetAddOnVersionInfo;
 
 do
     local version, _, _, tocVersion = GetBuildInfo();
-    local expansionID = string.match(version, "(%d+)%.");
     tocVersion = tonumber(tocVersion);
 
     local tooltipInfoVersion = 0;
@@ -306,4 +305,7 @@ do
         return tooltipInfoVersion
     end
     addon.GetTooltipInfoVersion = GetTooltipInfoVersion;
+
+	local expansionID = math.floor(tonumber(tocVersion) / 10000);
+	addon.expansionID = expansionID;
 end

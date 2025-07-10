@@ -24,8 +24,10 @@ local IS_ACHIEVEMENT = true;
 function TabUtil:EnableSearchBox(state)
     if state then
         SearchBox:Enable();
+        SearchBox.Instructions:SetText(SEARCH or "Search");
     else
         SearchBox:Disable();
+        SearchBox.Instructions:SetText("N/A");
     end
 end
 
@@ -65,12 +67,12 @@ end
 
 function NarciAchievementSearchBoxMixin:OnLoad()
     SearchBox = self;
-
     self:SetTextInsets(16, 20, 0, 0);
     self.Instructions:SetText(SEARCH);
 	self.Instructions:ClearAllPoints();
 	self.Instructions:SetPoint("TOPLEFT", self, "TOPLEFT", 16, 0);
 	self.Instructions:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -20, 0);
+    self.Instructions:SetMaxLines(1);
 	self.SearchIcon:SetVertexColor(0.6, 0.6, 0.6);
 
 
@@ -155,14 +157,6 @@ function NarciAchievementSearchBoxMixin:OnLoad()
     end
 
     ResultFrame:SetAlpha(0);
-
-
-    if not (SetAchievementSearchString and GetNumFilteredAchievements) then
-        --No Search in WotLK Classic
-        self:Hide();
-        self:SetScript("OnTextChanged", nil);
-        return
-    end
 end
 
 function NarciAchievementSearchBoxMixin:OnUpdate()
@@ -198,16 +192,12 @@ function NarciAchievementSearchBoxMixin:OnEditFocusGained()
     if tabID > 3 then return end;
 
     IS_ACHIEVEMENT = (tabID == 1 or tabID == 2);
-
-    --[[
-        --No Guild Achievement in Classic
     if tabID ~= self.tabID then
         self.tabID = tabID;
         SwitchAchievementSearchTab(tabID);
     end
-    --]]
-
     self:RegisterEvent("ACHIEVEMENT_SEARCH_UPDATED");
+    self:RegisterEvent("GLOBAL_MOUSE_DOWN");
     local numResults = GetNumFilteredAchievements() or 0;
     --this filter might be removed by using the original AchievementFrame so we need to set again
     if numResults > 0 then
@@ -276,7 +266,13 @@ function NarciAchievementSearchBoxMixin:ProcessResults()
 end
 
 function NarciAchievementSearchBoxMixin:OnEvent(event)
-    self:ProcessResults();
+    if event == "GLOBAL_MOUSE_DOWN" then
+        if not self:IsMouseOver() then
+            self:ClearFocus();
+        end
+    elseif event == "ACHIEVEMENT_SEARCH_UPDATED" then
+        self:ProcessResults();
+    end
 end
 
 function NarciAchievementSearchBoxMixin:ShowNoMatch()
