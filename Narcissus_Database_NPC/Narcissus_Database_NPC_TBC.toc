@@ -1,4 +1,4 @@
-## Interface: 20504
+## Interface: 20505
 ## Plain Title: Narcissus Database NPC
 ## Version: 9.2.1
 ## LoadOnDemand: 1
