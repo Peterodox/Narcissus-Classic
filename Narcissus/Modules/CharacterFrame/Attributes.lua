@@ -74,7 +74,7 @@ local CR_CRIT_MELEE = CR_CRIT_MELEE or 9;
 local CR_CRIT_RANGED = CR_CRIT_RANGED or 10;
 local CR_CRIT_SPELL = CR_CRIT_SPELL or 11;
 local CR_RESILIENCE_CRIT_TAKEN = CR_RESILIENCE_CRIT_TAKEN or 15;
-local COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN = COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN or 16;
+local COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN = COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN or CR_RESILIENCE_PLAYER_DAMAGE_TAKEN or 16;
 local CR_HASTE_MELEE = CR_HASTE_MELEE or 18;
 local CR_HASTE_RANGED = CR_HASTE_RANGED or 19;
 local CR_HASTE_SPELL = CR_HASTE_SPELL or 20;
@@ -918,7 +918,7 @@ function UpdateFunc.Resilience(object)
 
 	local resilienceRating = GetCombatRating(COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN);
 	local resilienceRatingText = BreakUpLargeNumbers(resilienceRating);
-	local ratingBonus = GetCombatRatingBonus(COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN);
+	local ratingBonus = GetCombatRatingBonus(COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN) or 0;
 	if ClassicExpansionAtLeast(LE_EXPANSION_MISTS_OF_PANDARIA) then
 		local damageReduction = ratingBonus + GetModResilienceDamageReduction();
 		resilienceRatingText = FormatPercentage(damageReduction);
@@ -927,8 +927,6 @@ function UpdateFunc.Resilience(object)
 		object.tooltip2 = RESILIENCE_TOOLTIP .. format(STAT_RESILIENCE_BASE_TOOLTIP, resilienceRating, ratingBonus);
 	else
 		object:SetLabelAndValue(STAT_RESILIENCE, resilience, resilience == 0);
-		object.tooltip = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, STAT_RESILIENCE).." "..resilienceRatingText..FONT_COLOR_CODE_CLOSE;	
-		object.tooltip2 = format(RESILIENCE_TOOLTIP, ratingBonus);
 	end
 end
 
