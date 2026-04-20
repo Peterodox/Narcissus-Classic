@@ -69,7 +69,6 @@ local bit = bit;
 local ITEM_INVENTORY_LOCATION_PLAYER = ITEM_INVENTORY_LOCATION_PLAYER;
 local ITEM_INVENTORY_LOCATION_BANK = ITEM_INVENTORY_LOCATION_BANK;
 local ITEM_INVENTORY_LOCATION_BAGS = ITEM_INVENTORY_LOCATION_BAGS;
-local ITEM_INVENTORY_LOCATION_VOIDSTORAGE = ITEM_INVENTORY_LOCATION_VOIDSTORAGE;
 local ITEM_INVENTORY_BAG_BIT_OFFSET = ITEM_INVENTORY_BAG_BIT_OFFSET;
 local ITEM_INVENTORY_BANK_BAG_OFFSET = ITEM_INVENTORY_BANK_BAG_OFFSET;
 
@@ -85,34 +84,30 @@ local function EquipmentManager_UnpackLocation(location)	--Copied from Retail
 	local player = (bit.band(location, ITEM_INVENTORY_LOCATION_PLAYER) ~= 0);
 	local bank = (bit.band(location, ITEM_INVENTORY_LOCATION_BANK) ~= 0);
 	local bags = (bit.band(location, ITEM_INVENTORY_LOCATION_BAGS) ~= 0);
-	local voidStorage = (bit.band(location, ITEM_INVENTORY_LOCATION_VOIDSTORAGE) ~= 0);
-	local tab, voidSlot;
-	if ( player ) then
+
+	if player then
 		location = location - ITEM_INVENTORY_LOCATION_PLAYER;
-	elseif ( bank ) then
+	elseif bank then
 		location = location - ITEM_INVENTORY_LOCATION_BANK;
-	elseif ( voidStorage ) then
-		location = location - ITEM_INVENTORY_LOCATION_VOIDSTORAGE;
-		tab = bit.rshift(location, ITEM_INVENTORY_BAG_BIT_OFFSET);
-		voidSlot = location - bit.lshift(tab, ITEM_INVENTORY_BAG_BIT_OFFSET);
 	end
 
-	if ( bags ) then
+	if bags then
 		location = location - ITEM_INVENTORY_LOCATION_BAGS;
 		local bag = bit.rshift(location, ITEM_INVENTORY_BAG_BIT_OFFSET);
 		local slot = location - bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET);
 
-		if ( bank ) then
+		if bank then
 			bag = bag + ITEM_INVENTORY_BANK_BAG_OFFSET;
 		end
-		return player, bank, bags, voidStorage, slot, bag, tab, voidSlot
+
+		return player, bank, bags, slot, bag;
 	else
-		return player, bank, bags, voidStorage, location, nil, tab, voidSlot
+		return player, bank, bags, location;
 	end
 end
 
-local function EquipmentManager_EquipItemByLocation (location, invSlot)
-	local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
+local function EquipmentManager_EquipItemByLocation(location, invSlot)
+	local player, bank, bags, slot, bag = EquipmentManager_UnpackLocation(location);
 
 	ClearCursor();
 
@@ -133,7 +128,7 @@ local function EquipmentManager_EquipItemByLocation (location, invSlot)
 	return action;
 end
 
-local function EquipmentManager_UnequipItemInSlot (invSlot)
+local function EquipmentManager_UnequipItemInSlot(invSlot)
 	local itemID = GetInventoryItemID("player", invSlot);
 	if ( not itemID ) then
 		return nil;
@@ -146,7 +141,7 @@ local function EquipmentManager_UnequipItemInSlot (invSlot)
 	return action;
 end
 
-local function EquipmentManager_EquipContainerItem (action)
+local function EquipmentManager_EquipContainerItem(action)
 	ClearCursor();
 	C_Container.PickupContainerItem(action.bag, action.slot);
 	if ( not CursorHasItem() ) then
@@ -164,7 +159,7 @@ local function EquipmentManager_EquipContainerItem (action)
 end
 
 
-local function EquipmentManager_PutItemInInventory (action)
+local function EquipmentManager_PutItemInInventory(action)
 	if ( not CursorHasItem() ) then
 		return;
 	end
@@ -187,12 +182,7 @@ local function EquipmentManager_PutItemInInventory (action)
 end
 
 
-local _EquipmentManager_RunAction;
-
-if EquipmentManager_RunAction and false then
-	_EquipmentManager_RunAction = EquipmentManager_RunAction;
-else
-	function _EquipmentManager_RunAction (action)
+local function EquipmentManager_RunAction(action)
 		if ( UnitAffectingCombat("player") and not INVSLOTS_EQUIPABLE_IN_COMBAT[action.invSlot] ) then
 			return true;
 		end
@@ -220,12 +210,11 @@ else
 			end
 		end
 	end
-end
 
 EquipmentManager.UnpackLocation = EquipmentManager_UnpackLocation;
 EquipmentManager.EquipItemByLocation = EquipmentManager_EquipItemByLocation;
 EquipmentManager.UnequipItemInSlot = EquipmentManager_UnequipItemInSlot;
-EquipmentManager.RunAction = _EquipmentManager_RunAction;
+EquipmentManager.RunAction = EquipmentManager_RunAction;
 
 
 local function GetEquipmentSetMissingSlot(setID)
@@ -239,7 +228,7 @@ local function GetEquipmentSetMissingSlot(setID)
 	local _, inBag, slot;
 
 	for slotID, location in ipairs(locations) do
-		_, _, inBag, _, slot = EquipmentManager_UnpackLocation(location);
+		_, _, inBag, slot = EquipmentManager_UnpackLocation(location);
 		if not (inBag or slot) then
 			numMissing = numMissing + 1;
 			slots[numMissing] = slotID;

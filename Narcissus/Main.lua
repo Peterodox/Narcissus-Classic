@@ -2451,7 +2451,7 @@ function NarciEquipmentFlyoutFrameMixin:DisplayItemsBySlotID(slotID, playFlyUpAn
 	end
 	self.BaseItem = bastItemLocation;
 	local buttons = self.buttons;
-	
+
 	--Get the items from bags;
 	local itemTable = {};
 	local sortedItems = {};
@@ -2463,7 +2463,7 @@ function NarciEquipmentFlyoutFrameMixin:DisplayItemsBySlotID(slotID, playFlyUpAn
 		if ( location - id == invLocationPlayer ) then -- Remove the currently equipped item from the list
 			itemTable[location] = nil;
 		else
-			local _, _, bags, _, slot, bag = EquipmentManagerAPI.UnpackLocation(location);
+			local player, bank, bags, slot, bag = EquipmentManagerAPI.UnpackLocation(location);
 			if bags then
 				itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot);
 				itemLevel = C_Item.GetCurrentItemLevel(itemLocation);
