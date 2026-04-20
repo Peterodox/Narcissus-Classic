@@ -4,6 +4,7 @@ local API = addon.API;
 local GetItemInfo = API.GetItemInfo;
 local GetItemInfoInstant = API.GetItemInfoInstant;
 local Narci = Narci;
+local IS_PRE_TRANSMOG_ERA = addon.expansionID and addon.expansionID < 5;
 
 local function GetItemIcon(itemID)
     if itemID then
@@ -19,14 +20,14 @@ end
 local function HoldWeaponButton_OnClick(self)
 	local model = Narci:GetActiveActor();
 	self.isOn = not self.isOn;
-    
+
     local isSheathed;
 
 	if model.SetSheathed then
         isSheathed = not model:GetSheathed();
         self.isOn = not isSheathed;
 		model:SetSheathed(isSheathed);
-        if model.bowData then
+        if model.bowData and model.SetItemTransmogInfo then
             if isSheathed then
                 model:SetItemTransmogInfo(model.bowData, 16);
             else
@@ -281,7 +282,8 @@ function NarciPhotoModeWeaponFrameMixin:SetItemFromActor(actor)
     actor.isItemLoaded = true;
     actor.bowData = nil;
 
-    if actor.GetItemTransmogInfo then
+
+    if actor.GetItemTransmogInfo and (not IS_PRE_TRANSMOG_ERA) then
         --New Method in 9.1.0   return ItemTransmogInfoMixin
         --DressUpModel / ModelSceneActor
         local transmogInfo;
@@ -312,7 +314,7 @@ function NarciPhotoModeWeaponFrameMixin:SetItemFromActor(actor)
             end
         end
 
-    elseif actor.GetSlotTransmogSources then
+    elseif actor.GetSlotTransmogSources and (not IS_PRE_TRANSMOG_ERA) then
         --DressUpModel / ModelSceneActor
         local sourceID, sourceInfo, itemID, name, icon;
         for slotID = 16, 17 do
