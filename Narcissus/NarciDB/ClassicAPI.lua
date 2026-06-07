@@ -587,7 +587,27 @@ do
 		[14] = true,
 	};
 
-	local function NarciAPI_GetSlotVisualID(slotID)
+	local function SetTransmogLocationData(transmogLocation, slotID, transmogType, modification)
+		local slot = C_TransmogOutfitInfo.GetTransmogOutfitSlotFromInventorySlot(slotID - 1);
+		local locationData = {
+			slotID = slotID,
+			slot = slot,
+			transmogType = transmogType or 0,
+			isSecondary = modification and modification == 1 or false,
+		}
+		transmogLocation:Set(locationData);
+	end
+	NarciClassicAPI.SetTransmogLocationData = SetTransmogLocationData;
+
+	local function GetSlotVisualInfo(transmogLocation)
+		local slotVisualInfo = transmogLocation and C_Transmog.GetSlotVisualInfo(transmogLocation:GetData());
+		if slotVisualInfo then
+			return slotVisualInfo.baseSourceID, slotVisualInfo.baseVisualID, slotVisualInfo.appliedSourceID, slotVisualInfo.appliedVisualID
+		end
+	end
+	NarciClassicAPI.GetSlotVisualInfo = GetSlotVisualInfo;
+
+	local function GetSlotVisualID(slotID)
 		if IGNORED_MOG_SLOT[slotID] then
 			--slotID = 2 ~ Use neck to show right shoulder
 			return 0, 0;
@@ -619,17 +639,19 @@ do
 				end
 				modification = 1;       --Enum.TransmogModification : 0 ~ Main, 1 ~ Secondary
 			end
-			transmogLocation:Set(slotID, transmogType, modification);
-			local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasPendingUndo, isHideVisual, itemSubclass = C_Transmog.GetSlotVisualInfo(transmogLocation);
+			SetTransmogLocationData(transmogLocation, slotID, transmogType, modification);
+			local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID = GetSlotVisualInfo(transmogLocation);
+
 			if ( appliedSourceID == 0 ) then
 				appliedSourceID = baseSourceID;
 				appliedVisualID = baseVisualID;
 			end
 			return appliedSourceID, appliedVisualID, hasSecondaryAppearance;
 		else
-			transmogLocation:Set(slotID, transmogType, modification);
+			SetTransmogLocationData(transmogLocation, slotID, transmogType, modification);
 
-			local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID, pendingSourceID, pendingVisualID, hasPendingUndo, isHideVisual, itemSubclass = C_Transmog.GetSlotVisualInfo(transmogLocation);
+			local baseSourceID, baseVisualID, appliedSourceID, appliedVisualID = GetSlotVisualInfo(transmogLocation);
+			--print(slotID, baseSourceID, baseVisualID, appliedSourceID, appliedVisualID)
 			if ( appliedSourceID == 0 ) then
 				appliedSourceID = baseSourceID;
 				appliedVisualID = baseVisualID;
@@ -638,5 +660,5 @@ do
 			return appliedSourceID, appliedVisualID;
 		end
 	end
-	NarciClassicAPI.GetSlotVisualID = NarciAPI_GetSlotVisualID;
+	NarciClassicAPI.GetSlotVisualID = GetSlotVisualID;
 end

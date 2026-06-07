@@ -3346,9 +3346,9 @@ do  --Show GameTooltip After Delay
                 tooltip:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY);
 
                 if info.title then
-                    tooltip:SetText(info.title, info.titleR or 1, info.titleG or 1, info.titleB or 1, true);
+                    tooltip:SetText(info.title, info.titleR or 1, info.titleG or 1, info.titleB or 1, 1, true);
                 elseif info.tooltip then
-                    tooltip:SetText(info.tooltip, info.r or 1, info.g or 1, info.b or 1, true);
+                    tooltip:SetText(info.tooltip, info.r or 1, info.g or 1, info.b or 1, 1, true);
                     descAdded = true;
                 end
 

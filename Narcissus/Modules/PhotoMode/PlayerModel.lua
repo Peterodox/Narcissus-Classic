@@ -587,6 +587,7 @@ end
 local GetInventoryItemID = GetInventoryItemLink --GetInventoryItemID;
 local UnitGUID = UnitGUID;
 local WeaponUpdator = {};
+WeaponUpdator.GetInspectTransmogInfo = C_TransmogCollection.GetInspectSources or C_TransmogCollection.GetInspectItemTransmogInfoList;
 
 local TRANSMOG_SLOT_ORRDER = {
 	INVSLOT_HEAD,       --1
@@ -693,11 +694,11 @@ end
 function WeaponUpdator:ProcessInspect(inspecteeGUID)
 	local model = self.queue[inspecteeGUID];
 	if model then
-		local transmogInfoList, mainHandEnchant, offHandEnchant = self:GetInspectItemLinks(inspecteeGUID);
+		local transmogInfoList, mainHandEnchant, offHandEnchant = self.GetInspectTransmogInfo and self.GetInspectTransmogInfo() or self:GetInspectItemLinks(inspecteeGUID);
 		if not model.equippedWeapons then
 			model.equippedWeapons = {};
 		end
-		TL = transmogInfoList;
+
 		if model.SetItemTransmogInfo then
 			local hand = 0;
 			local transmogInfo;

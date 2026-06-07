@@ -1367,6 +1367,118 @@ local validForTempEnchant = {
 
 NarciEquipmentSlotMixin = CreateFromMixins{NarciItemButtonSharedMixin};
 
+function NarciEquipmentSlotMixin:SetTransmogSourceID(appliedSourceID, secondarySourceID)
+	self.sourceID = appliedSourceID;
+
+	if appliedSourceID and appliedSourceID > 0 then
+		self.Icon:SetDesaturated(false);
+		self.Name:Show();
+		self.ItemLevel:Show();
+		self.GradientBackground:Show();
+	else
+		self.Icon:SetDesaturated(true);
+		self.Icon:SetTexture(self.emptyTexture);
+		self.Name:SetText(nil);
+		self.ItemLevel:SetText(nil);
+		self.GradientBackground:Hide();	
+		self:SetBorderTexture(self.Border, 0);
+		if self.slotID == 2 then
+			self:DisplayDirectionMark(false);
+		end
+		return
+	end
+
+	local itemName, itemIcon, itemQuality, subText;
+	local sourceInfo = C_TransmogCollection.GetSourceInfo(appliedSourceID);
+	itemName = sourceInfo and sourceInfo.name;
+
+	if not itemName or itemName == "" then
+		QueueFrame:Add(self, self.Refresh);
+		return
+	end
+
+	self.itemID = sourceInfo.itemID;
+	self.itemModID = sourceInfo.itemModID;
+	itemQuality = sourceInfo.quality or 1;
+	itemIcon = C_TransmogCollection.GetSourceIcon(appliedSourceID);
+
+	subText = TransmogDataProvider:GetSpecialItemSourceText(appliedSourceID, self.itemID, self.itemModID);
+
+	if subText then
+		self.sourcePlainText = NarciAPI.RemoveColorString(subText);
+		_, _, self.hyperlink = TransmogDataProvider:GetFormattedSourceText(sourceInfo);
+	else
+		subText, self.sourcePlainText, self.hyperlink = TransmogDataProvider:GetFormattedSourceText(sourceInfo);
+	end
+
+	if not subText then
+		subText = " ";
+	end
+
+	if self.hyperlink then
+		_, self.hyperlink = GetItemInfo(self.hyperlink);																		--original hyperlink cannot be printed (workaround)
+	end
+
+	local bonusID;
+	if itemQuality == 6 then
+		if self.slotID == 16 then
+			bonusID = (sourceInfo.itemModID or 0);	--Artifact use itemModID "7V0" + modID - 1
+		else
+			bonusID = 0;
+		end
+	end
+
+	self.bonusID = bonusID;
+
+
+	local bR, bG, bB = GetItemQualityColor(itemQuality);
+	local borderTexKey = itemQuality;
+	self:SetBorderTexture(self.Border, borderTexKey);
+
+	if self:IsVisible() then
+		if itemIcon then
+			self.IconOverlay:SetTexture(itemIcon);
+			self.Icon.anim:Play();
+		end
+		self.ItemLevel.anim1:SetScript("OnFinished", function(f)
+			self.ItemLevel:SetText(subText);
+			self.ItemLevel.anim2:Play();
+			f:SetScript("OnFinished", nil);
+		end)
+		self.Name.anim1:SetScript("OnFinished", function(f)
+			self.Name:SetText(itemName);
+			self.Name:SetTextColor(bR, bG, bB);
+			self.Name.anim2:Play();
+			f:SetScript("OnFinished", nil);
+			After(0, function()
+				self:UpdateGradientSize();
+			end)
+		end)
+		self.ItemLevel.anim1:Play();
+		self.Name.anim1:Play();
+	else
+		self.ItemLevel:SetText(subText);
+		self.Name:SetText(itemName);
+		self.Name:SetTextColor(bR, bG, bB);
+		if itemIcon then
+			self.Icon:SetTexture(itemIcon);
+		end
+		self:UpdateGradientSize();
+	end
+
+	if self.slotID == 3 then
+		--shoulder
+		if secondarySourceID and secondarySourceID > 0 and secondarySourceID ~= appliedSourceID then
+			self:DisplayDirectionMark(true, itemQuality);
+			SLOT_TABLE[2]:SetTransmogSourceID(secondarySourceID, secondarySourceID);
+		else
+			self:DisplayDirectionMark(false);
+		end
+	elseif self.slotID == 2 then
+		self:DisplayDirectionMark(appliedSourceID, itemQuality);
+	end
+end
+
 function NarciEquipmentSlotMixin:Refresh(forceRefresh)
 	local _;
 	local slotID = self.slotID;
@@ -1383,9 +1495,15 @@ function NarciEquipmentSlotMixin:Refresh(forceRefresh)
 			self:UntrackCooldown();
 			self:UntrackTempEnchant();
 			self:HideVFX();
+			self.GemSlot:HideSlot();
 			self.itemLink = nil;
 			self.isSlotHidden = false;	--Undress an item from player model
 			self.RuneSlot:Hide();
+
+			if TransmogDataProvider.RequestUpdateCharacterUI() then
+				return true
+			end
+
 			self.GradientBackground:Show();
 			local appliedSourceID, appliedVisualID, hasSecondaryAppearance = NarciClassicAPI.GetSlotVisualID(slotID);
 			self.sourceID = appliedSourceID;
@@ -1441,6 +1559,7 @@ function NarciEquipmentSlotMixin:Refresh(forceRefresh)
 				self.bonusID = nil;
 			end
 			self:DisplayDirectionMark(hasSecondaryAppearance, itemQuality);
+
 		else
 			self:TrackCooldown();
 			self:DisplayDirectionMark(false);
@@ -2065,6 +2184,18 @@ local function UpdateCharacterInfoFrame(newLevel)
 
 	ItemLevelFrame:AsyncUpdate();
 end
+
+local function DisplayItemTransmogInfoList(itemTransmogInfoList)
+	if MOG_MODE and CAN_MOG and Narci_Character:IsVisible() then
+		for slotID, info in ipairs(itemTransmogInfoList) do
+			if SLOT_TABLE[slotID] then
+				SLOT_TABLE[slotID]:SetTransmogSourceID(info.appearanceID, info.secondaryAppearanceID);    --SetAppearance
+			end
+		end
+	end
+end
+NarciAPI.DisplayItemTransmogInfoList = DisplayItemTransmogInfoList;
+
 
 local SlotController = {};
 SlotController.updateFrame = CreateFrame("Frame");
@@ -3091,7 +3222,12 @@ local function Narci_XmogButton_OnClick(self)
 		end
 	end
 
-	SlotController:LazyRefresh();
+	if MOG_MODE then
+		SlotController:RefreshAll();
+	else
+		SlotController:LazyRefresh();
+	end
+
 	After(0.1, function()
 		ActivateMogMode();
 	end)

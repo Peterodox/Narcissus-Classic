@@ -1194,33 +1194,17 @@ function NarciRayTracingToggleMixin:OnLeave()
 end
 
 function NarciRayTracingToggleMixin:OnLoad()
-	local validity;
-	if Advanced_RTShadowQualityDropDown then
-		validity = true;
-	end
-	local info = { GetToolTipInfo(1, 4, "shadowrt", 0, 1, 2, 3) };
-	for i = 1, #info do
-		if info[i] ~= 0 then
-			validity = validity and false;
-			break;
-		end
-	end
-
-    self:OnLeave();
-
+	local validity = Advanced_RTShadowQualityDropDown ~= nil;
 	self.isValid = validity;
+    self:OnLeave();
 	if not validity then
 		self:Hide();
 		self:Disable();
         self:GetParent():SetWidth(134);
-        --
 	end
-
 	self:SetScript("OnLoad", nil);
 	self.OnLoad = nil;
 end
-
-
 
 
 do
